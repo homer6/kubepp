@@ -19,7 +19,9 @@ cmake --build build --target all
 ## Running
 
 ```
-./build/kubify contents prompt --ignore src/CLI /docs /tests /build -- . > contents.txt
+./build/kubepp logs
 
-./build/kubify contents graph --ignore src/CLI /docs /tests /build -- . > project.gv
+./build/kubepp events watch
+
+./build/kubepp events --help
 ```
