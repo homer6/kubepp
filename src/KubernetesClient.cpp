@@ -24,8 +24,8 @@ namespace kubepp{
             throw std::runtime_error("Cannot load kubernetes configuration.");
         }
 
-        //apiClient = apiClient_create_with_base_path(basePath, sslConfig, apiKeys);
-        apiClient = apiClient_create();
+        apiClient = apiClient_create_with_base_path(basePath, sslConfig, apiKeys);
+        //apiClient = apiClient_create();
         if (!apiClient) {
             throw std::runtime_error("Cannot create a kubernetes client.");
         }
@@ -56,7 +56,9 @@ namespace kubepp{
     void KubernetesClient::listPod(){
 
         v1_pod_list_t *pod_list = NULL;
-        pod_list = CoreV1API_listNamespacedPod(apiClient, "default",    /*namespace */
+        char *k8s_namespace = "kube-system";
+        pod_list = CoreV1API_listNamespacedPod(apiClient, 
+                                            k8s_namespace,   /*namespace */
                                             NULL,    /* pretty */
                                             NULL,    /* allowWatchBookmarks */
                                             NULL,    /* continue */
@@ -67,7 +69,7 @@ namespace kubepp{
                                             NULL,    /* resourceVersionMatch */
                                             NULL,    /* sendInitialEvents */
                                             NULL,    /* timeoutSeconds */
-                                            NULL /* watch */
+                                            NULL     /* watch */
             );
 
         fmt::print("The return code of HTTP request={}\n", apiClient->response_code);

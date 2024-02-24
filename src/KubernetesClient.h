@@ -21,7 +21,7 @@ namespace kubepp{
 
         protected:
             apiClient_t *apiClient = nullptr;
-            char *basePath = nullptr;
+            char *basePath = "https://10.0.0.157:6443";
             sslConfig_t *sslConfig = nullptr;
             list_t *apiKeys = nullptr;
 
