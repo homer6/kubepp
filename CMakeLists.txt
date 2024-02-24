@@ -31,11 +31,11 @@ target_link_libraries(kubepp fmt::fmt)
 
 
 # Add test executable
-#add_executable(test_kubepp tests/TestKubeppApp.cpp ${SOURCES})
-#target_link_libraries(test_kubepp ${GTEST_LIBRARIES} pthread fmt::fmt)
+add_executable(test_kubepp tests/TestKubeppApp.cpp ${SOURCES})
+target_link_libraries(test_kubepp ${GTEST_LIBRARIES} pthread fmt::fmt)
 
 
 # Add test to the project to be run with 'make test' or 'ctest'
-#add_test(NAME kubepp_test COMMAND test_kubepp)
+add_test(NAME kubepp_test COMMAND test_kubepp)
 
 

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 TEST(KubeppAppTest, RunMethod) {
-    kubify::KubeppApp app;
+    kubepp::KubeppApp app;
     EXPECT_EQ(app.run(), "KubeppApp is running!");
 }
 

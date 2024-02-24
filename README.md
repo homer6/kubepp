@@ -16,6 +16,13 @@ cmake -S . -B build
 cmake --build build --target all
 ```
 
+## Running Tests
+
+```
+cmake --build build --target test
+```
+
+
 ## Running
 
 ```
