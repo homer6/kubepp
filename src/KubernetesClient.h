@@ -10,6 +10,9 @@ using std::string;
 #include <vector>
 using std::vector;
 
+#include <set>
+using std::set;
+
 #include <memory>
 
 
@@ -24,8 +27,11 @@ namespace kubepp{
 
             void run();
             void listPods( const vector<string>& k8s_namespaces = { "all" } ) const;
+            void listDeployments( const vector<string>& k8s_namespaces = { "all" } ) const;
 
             vector<string> getNamespaces() const;
+            set<string> resolveNamespaces( const vector<string>& k8s_namespaces = { "all" } ) const;
+
 
 
         protected:

@@ -4,6 +4,7 @@ extern "C" {
     #include <kube_config.h>
     #include <apiClient.h>
     #include <CoreV1API.h>
+    #include <AppsV1API.h>
 }
 
 #include <stdexcept>
@@ -13,8 +14,6 @@ extern "C" {
 #include "spdlog/cfg/env.h"   // support for loading levels from the environment variable
 #include "spdlog/fmt/ostr.h"  // support for user defined types
 
-#include <set>
-using std::set;
 
 #include <iostream>
 using std::cout;
@@ -68,6 +67,7 @@ namespace kubepp{
 
         spdlog::info( "Hello, kube world! (client)" );
         this->listPods();
+        this->listDeployments();
 
     }
 
@@ -117,15 +117,7 @@ namespace kubepp{
 
     void KubernetesClient::listPods( const vector<string>& k8s_namespaces ) const{
 
-        // if "all" is in the list, then get all namespaces
-        set<string> namespaces( k8s_namespaces.begin(), k8s_namespaces.end() );
-
-        if( namespaces.find("all") != namespaces.end() ){
-            auto all_namespaces = this->getNamespaces();
-            namespaces.insert(all_namespaces.begin(), all_namespaces.end());
-            namespaces.erase("all");
-        }
-
+        auto namespaces = this->resolveNamespaces(k8s_namespaces);
 
         for( const string& k8s_namespace : namespaces ){
 
@@ -168,6 +160,74 @@ namespace kubepp{
 
         }
 
+
+    }
+
+
+
+
+
+    void KubernetesClient::listDeployments( const vector<string>& k8s_namespaces ) const{
+
+        auto namespaces = this->resolveNamespaces(k8s_namespaces);
+
+        for( const string& k8s_namespace : namespaces ){
+
+            v1_deployment_list_t *deployment_list = NULL;
+            deployment_list = AppsV1API_listNamespacedDeployment(const_cast<apiClient_t*>(api_client.get()), 
+                                                const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+                                                NULL,    /* pretty */
+                                                NULL,    /* allowWatchBookmarks */
+                                                NULL,    /* continue */
+                                                NULL,    /* fieldSelector */
+                                                NULL,    /* labelSelector */
+                                                NULL,    /* limit */
+                                                NULL,    /* resourceVersion */
+                                                NULL,    /* resourceVersionMatch */
+                                                NULL,    /* sendInitialEvents */
+                                                NULL,    /* timeoutSeconds */
+                                                NULL     /* watch */
+                );
+
+            //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
+
+            if( deployment_list ){
+
+                fmt::print("Get deployment list for namespace '{}':\n", k8s_namespace);
+
+                listEntry_t *listEntry = NULL;
+                v1_deployment_t *deployment = NULL;
+                list_ForEach(listEntry, deployment_list->items) {
+                    deployment = (v1_deployment_t *)listEntry->data;
+                    fmt::print("\tThe deployment name: {}\n", deployment->metadata->name);
+                }
+                v1_deployment_list_free(deployment_list);
+                deployment_list = NULL;
+
+            }else{
+
+                fmt::print("Cannot get any deployment.\n");
+
+            }
+
+        }
+
+
+    }
+
+
+    set<string> KubernetesClient::resolveNamespaces( const vector<string>& k8s_namespaces ) const{
+
+        // if "all" is in the list, then get all namespaces
+        set<string> namespaces( k8s_namespaces.begin(), k8s_namespaces.end() );
+
+        if( namespaces.find("all") != namespaces.end() ){
+            auto all_namespaces = this->getNamespaces();
+            namespaces.insert(all_namespaces.begin(), all_namespaces.end());
+            namespaces.erase("all");
+        }
+
+        return namespaces;
 
     }
 
