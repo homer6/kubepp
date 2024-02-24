@@ -4,6 +4,13 @@ extern "C" {
     #include <apiClient.h>
 }
 
+#include <string>
+using std::string;
+
+#include <vector>
+using std::vector;
+
+#include <memory>
 
 
 namespace kubepp{
@@ -12,16 +19,21 @@ namespace kubepp{
     class KubernetesClient{
 
         public:
-            KubernetesClient();
+            KubernetesClient( const string& base_path_str = "https://10.0.0.157:6443" );
             ~KubernetesClient();
 
             void run();
-            void listPod();
+            void listPods( const vector<string>& k8s_namespaces = { "all" } ) const;
+
+            vector<string> getNamespaces() const;
 
 
         protected:
-            apiClient_t *apiClient = nullptr;
-            char *basePath = "https://10.0.0.157:6443";
+            std::shared_ptr<apiClient_t> api_client;
+            char* detected_base_path = NULL;
+            string base_path;
+
+            //todo: move to smart pointers
             sslConfig_t *sslConfig = nullptr;
             list_t *apiKeys = nullptr;
 
