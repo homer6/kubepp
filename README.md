@@ -26,9 +26,11 @@ cmake --build build --target test
 ## Running
 
 ```
-./build/kubepp logs
+KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E ./build/kubepp logs
 
 ./build/kubepp events watch
 
 ./build/kubepp events --help
 ```
+
+

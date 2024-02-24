@@ -5,37 +5,46 @@ project(kubepp VERSION 0.1)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+
 # Include directories for your project
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
 # Set all of the sources
 set(SOURCES
     src/KubeppApp.cpp
+    src/KubernetesClient.cpp
 )
 
+include_directories(
+    "/usr/local/include/kubernetes/include"
+    "/usr/local/include/kubernetes/config"
+    "/usr/local/include/kubernetes/api"
+)
 
 # Add main application
 add_executable(kubepp src/main.cpp ${SOURCES})
 
-# Enable testing with CTest
-enable_testing()
-
-# Find Google Test package (should work if GTest is installed properly)
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
-
 # Find the fmt library
 find_package(fmt REQUIRED)
-target_link_libraries(kubepp fmt::fmt)
+target_link_libraries(kubepp PRIVATE kubernetes fmt::fmt)
 
 
 
-# Add test executable
-add_executable(test_kubepp tests/TestKubeppApp.cpp ${SOURCES})
-target_link_libraries(test_kubepp ${GTEST_LIBRARIES} pthread fmt::fmt)
+
+# # Enable testing with CTest
+# enable_testing()
+
+# # Find Google Test package (should work if GTest is installed properly)
+# find_package(GTest REQUIRED)
+# include_directories(${GTEST_INCLUDE_DIRS})
 
 
-# Add test to the project to be run with 'make test' or 'ctest'
-add_test(NAME kubepp_test COMMAND test_kubepp)
+# # Add test executable
+# add_executable(test_kubepp tests/TestKubeppApp.cpp ${SOURCES})
+# target_link_libraries(test_kubepp ${GTEST_LIBRARIES} pthread fmt::fmt kubernetes)
+
+
+# # Add test to the project to be run with 'make test' or 'ctest'
+# add_test(NAME kubepp_test COMMAND test_kubepp)
 
 

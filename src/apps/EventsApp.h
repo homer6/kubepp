@@ -8,6 +8,8 @@ using std::string;
 using std::cout;
 using std::endl;
 
+#include "KubernetesClient.h"
+
 
 namespace kubepp::apps {
 
@@ -18,6 +20,9 @@ namespace kubepp::apps {
             void run(){
 
                 spdlog::info( "Hello, kube world! (events)" );
+
+                KubernetesClient client;
+                client.run();
                 
             }
 
