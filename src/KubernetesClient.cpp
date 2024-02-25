@@ -161,7 +161,8 @@ namespace kubepp{
         for( const string& k8s_namespace : namespaces ){
 
             std::shared_ptr<v1_pod_list_t> pod_list( 
-                                                    CoreV1API_listNamespacedPod(const_cast<apiClient_t*>(api_client.get()), 
+                                                    CoreV1API_listNamespacedPod(
+                                                        const_cast<apiClient_t*>(api_client.get()), 
                                                         const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
                                                         NULL,    /* pretty */
                                                         NULL,    /* allowWatchBookmarks */
@@ -183,14 +184,7 @@ namespace kubepp{
 
             if( pod_list ){
 
-                fmt::print("Get pod list for namespace '{}':\n", k8s_namespace);
-
-                // cjson cjson_pod_list( v1_pod_list_convertToJSON(pod_list.get()) );
-
-                // if( cjson_pod_list ){
-                //     pods = cjson_pod_list.toJson();
-                // }
-
+                //fmt::print("Get pod list for namespace '{}':\n", k8s_namespace);
 
                 listEntry_t *listEntry = NULL;
                 v1_pod_t *pod = NULL;
@@ -201,10 +195,13 @@ namespace kubepp{
 
                     pod = (v1_pod_t *)listEntry->data;
 
-                    json pod_json = json::object();
+                    json pod_json = cjson( v1_pod_convertToJSON(pod) ).toJson();
 
-                    pod_json["namespace"] = k8s_namespace;
-                    pod_json["type"] = "pod";
+                    pod_json["apiVersion"] = "v1";
+                    pod_json["kind"] = "Pod";
+
+                    //pod_json["namespace"] = k8s_namespace;
+                    //pod_json["type"] = "pod";
                     //pod_json["name"] = if( pod->metadata->name )  string(pod->metadata->name);
                     //pod_json["api_version"] = string(pod->api_version);
                     //pod_json["kind"] = string(pod->kind);
@@ -242,43 +239,50 @@ namespace kubepp{
 
         for( const string& k8s_namespace : namespaces ){
 
-            v1_deployment_list_t *deployment_list = NULL;
-            deployment_list = AppsV1API_listNamespacedDeployment(const_cast<apiClient_t*>(api_client.get()), 
-                                                const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-                                                NULL,    /* pretty */
-                                                NULL,    /* allowWatchBookmarks */
-                                                NULL,    /* continue */
-                                                NULL,    /* fieldSelector */
-                                                NULL,    /* labelSelector */
-                                                NULL,    /* limit */
-                                                NULL,    /* resourceVersion */
-                                                NULL,    /* resourceVersionMatch */
-                                                NULL,    /* sendInitialEvents */
-                                                NULL,    /* timeoutSeconds */
-                                                NULL     /* watch */
-                );
+            std::shared_ptr<v1_deployment_list_t> deployment_list( 
+                                                    AppsV1API_listNamespacedDeployment(
+                                                        const_cast<apiClient_t*>(api_client.get()), 
+                                                        const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+                                                        NULL,    /* pretty */
+                                                        NULL,    /* allowWatchBookmarks */
+                                                        NULL,    /* continue */
+                                                        NULL,    /* fieldSelector */
+                                                        NULL,    /* labelSelector */
+                                                        NULL,    /* limit */
+                                                        NULL,    /* resourceVersion */
+                                                        NULL,    /* resourceVersionMatch */
+                                                        NULL,    /* sendInitialEvents */
+                                                        NULL,    /* timeoutSeconds */
+                                                        NULL     /* watch */
+                                                    ),
+                                                    v1_deployment_list_free
+                                                );
 
             //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
 
             if( deployment_list ){
 
+                //fmt::print("Get deployment list for namespace '{}':\n", k8s_namespace);
+
                 listEntry_t *listEntry = NULL;
                 v1_deployment_t *deployment = NULL;
+
                 list_ForEach(listEntry, deployment_list->items) {
+
                     deployment = (v1_deployment_t *)listEntry->data;
 
-                    json deployment_json = json::object();
-                    deployment_json["namespace"] = k8s_namespace;
-                    deployment_json["type"] = "deployment";
-                    deployment_json["name"] = string(deployment->metadata->name);
-                    deployment_json["replicas"] = deployment->spec->replicas;
-                    deployment_json["available_replicas"] = deployment->status->available_replicas;
-                    deployment_json["unavailable_replicas"] = deployment->status->unavailable_replicas;
-                    
+                    json deployment_json = cjson( v1_deployment_convertToJSON(deployment) ).toJson();
+
+                    deployment_json["apiVersion"] = "apps/v1";
+                    deployment_json["kind"] = "Deployment";
+
+                    //deployment_json["metadata"] = cjson( v1_object_meta_convertToJSON(deployment->metadata) ).toJson();
+                    //deployment_json["spec"] = cjson( v1_deployment_spec_convertToJSON(deployment->spec) ).toJson();
+                    //deployment_json["status"] = cjson( v1_deployment_status_convertToJSON(deployment->status) ).toJson();
+
                     deployments.push_back(deployment_json);
+
                 }
-                v1_deployment_list_free(deployment_list);
-                deployment_list = NULL;
 
             }else{
 
