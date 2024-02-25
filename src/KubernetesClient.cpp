@@ -5,6 +5,7 @@ extern "C" {
     #include <apiClient.h>
     #include <CoreV1API.h>
     #include <AppsV1API.h>
+    #include <ApiextensionsV1API.h>
 }
 
 #include <stdexcept>
@@ -520,6 +521,47 @@ typedef struct v1_node_t {
 
     }
 
+
+    json KubernetesClient::createCustomResourceDefinition( const json& custom_resource_definition ) const{
+
+        json response = json::object();
+
+        // Convert the nlohmann JSON object to a JSON string and then parse it into a cJSON object
+        const string json_string = custom_resource_definition.dump();
+        cJSON* json_c = cJSON_Parse(json_string.c_str());
+        if( !json_c ){
+            fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
+            throw std::runtime_error("Cannot parse the custom resource definition JSON.");
+        }
+
+        // Now, use the cJSON object to parse into the v1_custom_resource_definition_t structure
+        v1_custom_resource_definition_t* crd = v1_custom_resource_definition_parseFromJSON(json_c);
+        v1_custom_resource_definition_t* created_custom_resource_definition = ApiextensionsV1API_createCustomResourceDefinition(const_cast<apiClient_t*>(api_client.get()), crd, NULL, NULL, NULL, NULL);
+
+        if (created_custom_resource_definition) {
+            cJSON* cjson_response = v1_custom_resource_definition_convertToJSON(created_custom_resource_definition);
+
+            // Convert cJSON to nlohmann JSON
+            response = json::parse(cJSON_Print(cjson_response));
+
+            // Free the cJSON
+            cJSON_Delete(cjson_response);
+
+            // Free the created custom resource definition object
+            v1_custom_resource_definition_free(created_custom_resource_definition);
+        } else {
+            fmt::print("Cannot create a custom resource definition.\n");
+        }
+
+        // Free the cJSON object
+        cJSON_Delete(json_c);
+
+        // Free the original CRD object
+        v1_custom_resource_definition_free(crd);
+
+        return response;
+        
+    }
 
 
 

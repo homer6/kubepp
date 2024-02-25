@@ -38,6 +38,12 @@ namespace kubepp{
             json getEvents( const vector<string>& k8s_namespaces = { "all" } ) const;
             json getNodes() const;
 
+            
+
+            json createCustomResourceDefinition( const json& custom_resource_definition ) const;
+            
+
+
             //doesn't work yet; needs debugging
             json getPodLogs( const string& k8s_namespace, const string& pod_name, const string& container ) const;
 

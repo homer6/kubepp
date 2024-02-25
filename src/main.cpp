@@ -34,6 +34,10 @@ int main(int argc, char **argv) {
         CLI::App *nodes_app = app.add_subcommand("nodes", "Manage nodes.");
 
 
+    // CRDs command
+        CLI::App *crds_app = app.add_subcommand("crds", "Manage custom resource definitions.");
+
+
     // parse the command line arguments
 
         CLI11_PARSE(app, argc, argv);
@@ -66,6 +70,14 @@ int main(int argc, char **argv) {
             else if( *nodes_app ){
 
                 kubepp_app.nodes_app.run();
+
+            }
+
+        // CRDs command
+
+            else if( *crds_app ){
+
+                kubepp_app.crds_app.run();
 
             }
 

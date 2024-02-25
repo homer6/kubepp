@@ -11,6 +11,7 @@ using std::string;
 #include "apps/LogsApp.h"
 #include "apps/WorkloadsApp.h"
 #include "apps/NodesApp.h"
+#include "apps/CustomResourceDefinitionsApp.h"
 
 
 namespace kubepp {
@@ -31,6 +32,7 @@ namespace kubepp {
             apps::LogsApp logs_app;
             apps::WorkloadsApp workloads_app;
             apps::NodesApp nodes_app;
+            apps::CustomResourceDefinitionsApp crds_app;
             
     };
 
