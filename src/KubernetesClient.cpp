@@ -259,14 +259,20 @@ namespace kubepp{
 
             if( deployment_list ){
 
-                //fmt::print("Get deployment list for namespace '{}':\n", k8s_namespace);
-
                 listEntry_t *listEntry = NULL;
                 v1_deployment_t *deployment = NULL;
                 list_ForEach(listEntry, deployment_list->items) {
                     deployment = (v1_deployment_t *)listEntry->data;
-                    //fmt::print("\tThe deployment name: {}\n", deployment->metadata->name);
-                    deployments.push_back( json{ {"namespace", k8s_namespace}, {"type","deployment"}, {"name", deployment->metadata->name} } );
+
+                    json deployment_json = json::object();
+                    deployment_json["namespace"] = k8s_namespace;
+                    deployment_json["type"] = "deployment";
+                    deployment_json["name"] = string(deployment->metadata->name);
+                    deployment_json["replicas"] = deployment->spec->replicas;
+                    deployment_json["available_replicas"] = deployment->status->available_replicas;
+                    deployment_json["unavailable_replicas"] = deployment->status->unavailable_replicas;
+                    
+                    deployments.push_back(deployment_json);
                 }
                 v1_deployment_list_free(deployment_list);
                 deployment_list = NULL;
