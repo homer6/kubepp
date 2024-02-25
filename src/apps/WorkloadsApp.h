@@ -13,14 +13,14 @@ using std::endl;
 
 namespace kubepp::apps {
 
-    class LogsApp {
+    class WorkloadsApp {
 
         public:
 
             void run(){
 
                 KubernetesClient kube_client;
-                kube_client.displayEvents();
+                kube_client.displayWorkloads();
                 
             }
 

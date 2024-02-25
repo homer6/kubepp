@@ -9,6 +9,7 @@ using std::string;
 
 #include "apps/EventsApp.h"
 #include "apps/LogsApp.h"
+#include "apps/WorkloadsApp.h"
 
 
 namespace kubepp {
@@ -27,6 +28,7 @@ namespace kubepp {
         public:
             apps::EventsApp events_app;
             apps::LogsApp logs_app;
+            apps::WorkloadsApp workloads_app;
             
     };
 

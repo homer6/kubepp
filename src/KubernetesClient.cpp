@@ -63,11 +63,20 @@ namespace kubepp{
 
     }
 
-    void KubernetesClient::run(){
+    void KubernetesClient::displayWorkloads() const{
 
-        spdlog::info( "Hello, kube world! (client)" );
+        spdlog::info( "Listing pods:" );
         this->listPods();
+
+        spdlog::info( "Listing deployments:" );
         this->listDeployments();
+
+    }
+
+    void KubernetesClient::displayEvents() const{
+
+        spdlog::info( "Listing events:" );
+        this->listEvents();
 
     }
 
@@ -212,6 +221,54 @@ namespace kubepp{
 
         }
 
+
+    }
+
+
+    void KubernetesClient::listEvents( const vector<string>& k8s_namespaces ) const{
+
+        auto namespaces = this->resolveNamespaces(k8s_namespaces);
+
+        for( const string& k8s_namespace : namespaces ){
+
+            core_v1_event_list_t *event_list = NULL;
+            event_list = CoreV1API_listNamespacedEvent(const_cast<apiClient_t*>(api_client.get()), 
+                                                const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+                                                NULL,    /* pretty */
+                                                NULL,    /* allowWatchBookmarks */
+                                                NULL,    /* continue */
+                                                NULL,    /* fieldSelector */
+                                                NULL,    /* labelSelector */
+                                                NULL,    /* limit */
+                                                NULL,    /* resourceVersion */
+                                                NULL,    /* resourceVersionMatch */
+                                                NULL,    /* sendInitialEvents */
+                                                NULL,    /* timeoutSeconds */
+                                                NULL     /* watch */
+                );
+
+            //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
+
+            if( event_list ){
+
+                fmt::print("Get event list for namespace '{}':\n", k8s_namespace);
+
+                listEntry_t *listEntry = NULL;
+                core_v1_event_t *event = NULL;
+                list_ForEach(listEntry, event_list->items) {
+                    event = (core_v1_event_t *)listEntry->data;
+                    fmt::print("\tThe event name: {}\n", event->metadata->name);
+                }
+                core_v1_event_list_free(event_list);
+                event_list = NULL;
+
+            }else{
+
+                fmt::print("Cannot get any event.\n");
+
+            }
+
+        }
 
     }
 

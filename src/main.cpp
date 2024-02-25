@@ -21,11 +21,14 @@ int main(int argc, char **argv) {
         CLI::App *events_app = app.add_subcommand("events", "Manage events.");
 
         // Watch
-        CLI::App *events_watch = events_app->add_subcommand("watch", "Watches events from the current Kubernetes cluster.");
+        //CLI::App *events_watch = events_app->add_subcommand("watch", "Watches events from the current Kubernetes cluster.");
 
 
     // Logs command
         CLI::App *logs_app = app.add_subcommand("logs", "Manage logs.");
+
+    // Workloads command
+        CLI::App *workloads_app = app.add_subcommand("workloads", "Manage workloads.");
 
 
     // parse the command line arguments
@@ -34,7 +37,7 @@ int main(int argc, char **argv) {
 
         // Events command
 
-            if( *events_watch ){
+            if( *events_app ){
                 kubepp_app.events_app.run();
             }
 
@@ -44,6 +47,14 @@ int main(int argc, char **argv) {
             else if( *logs_app ){
 
                 kubepp_app.logs_app.run();
+
+            }
+
+        // Workloads command
+
+            else if( *workloads_app ){
+
+                kubepp_app.workloads_app.run();
 
             }
 

@@ -25,9 +25,12 @@ namespace kubepp{
             KubernetesClient( const string& base_path_str = "https://10.0.0.157:6443" );
             ~KubernetesClient();
 
-            void run();
+            void displayWorkloads() const;
+            void displayEvents() const;
+            
             void listPods( const vector<string>& k8s_namespaces = { "all" } ) const;
             void listDeployments( const vector<string>& k8s_namespaces = { "all" } ) const;
+            void listEvents( const vector<string>& k8s_namespaces = { "all" } ) const;
 
             vector<string> getNamespaces() const;
             set<string> resolveNamespaces( const vector<string>& k8s_namespaces = { "all" } ) const;

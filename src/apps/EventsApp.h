@@ -19,10 +19,8 @@ namespace kubepp::apps {
 
             void run(){
 
-                spdlog::info( "Hello, kube world! (events)" );
-
-                KubernetesClient client;
-                client.run();
+                KubernetesClient kube_client;
+                kube_client.displayEvents();
                 
             }
 
