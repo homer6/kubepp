@@ -21,6 +21,7 @@ using std::endl;
 using std::cerr;
 
 
+#include "json.hpp"
 
 
 namespace kubepp{
@@ -66,17 +67,32 @@ namespace kubepp{
     void KubernetesClient::displayWorkloads() const{
 
         spdlog::info( "Listing pods:" );
-        this->listPods();
+        cout << this->getPods().dump(4) << endl;
 
         spdlog::info( "Listing deployments:" );
-        this->listDeployments();
+        cout << this->getDeployments().dump(4) << endl;
 
     }
 
     void KubernetesClient::displayEvents() const{
 
         spdlog::info( "Listing events:" );
-        this->listEvents();
+        cout << this->getEvents().dump(4) << endl;
+
+    }
+
+
+    void KubernetesClient::displayLogs() const{
+
+        spdlog::info( "Listing logs:" );
+
+        auto pods = this->getPods();
+
+        for( const auto& pod : pods ){
+            for( const auto& container : pod["containers"] ){                
+                cout << this->getPodLogs(pod["namespace"], pod["name"], container).dump(4) << endl;
+            }            
+        }
 
     }
 
@@ -124,9 +140,11 @@ namespace kubepp{
 
 
 
-    void KubernetesClient::listPods( const vector<string>& k8s_namespaces ) const{
+    json KubernetesClient::getPods( const vector<string>& k8s_namespaces ) const{
 
         auto namespaces = this->resolveNamespaces(k8s_namespaces);
+
+        json pods = json::array();
 
         for( const string& k8s_namespace : namespaces ){
 
@@ -150,13 +168,26 @@ namespace kubepp{
 
             if( pod_list ){
 
-                fmt::print("Get pod list for namespace '{}':\n", k8s_namespace);
+                //fmt::print("Get pod list for namespace '{}':\n", k8s_namespace);
 
                 listEntry_t *listEntry = NULL;
                 v1_pod_t *pod = NULL;
                 list_ForEach(listEntry, pod_list->items) {
                     pod = (v1_pod_t *)listEntry->data;
-                    fmt::print("\tThe pod name: {}\n", pod->metadata->name);
+                    //fmt::print("\tThe pod name: {}\n", pod->metadata->name);
+                    
+
+                    // add the container names
+                    json containers = json::array();
+                    listEntry_t *container_list_entry = NULL;
+                    v1_container_t *container = NULL;
+                    list_ForEach(container_list_entry, pod->spec->containers) {
+                        container = (v1_container_t *)container_list_entry->data;
+                        containers.push_back( container->name );
+                    }
+                    
+                    pods.push_back( json{ {"namespace", k8s_namespace}, {"type","pod"}, {"name", string(pod->metadata->name)}, {"containers", containers} } );
+
                 }
                 v1_pod_list_free(pod_list);
                 pod_list = NULL;
@@ -169,6 +200,8 @@ namespace kubepp{
 
         }
 
+        return pods;
+
 
     }
 
@@ -176,9 +209,11 @@ namespace kubepp{
 
 
 
-    void KubernetesClient::listDeployments( const vector<string>& k8s_namespaces ) const{
+    json KubernetesClient::getDeployments( const vector<string>& k8s_namespaces ) const{
 
         auto namespaces = this->resolveNamespaces(k8s_namespaces);
+
+        json deployments = json::array();
 
         for( const string& k8s_namespace : namespaces ){
 
@@ -202,13 +237,14 @@ namespace kubepp{
 
             if( deployment_list ){
 
-                fmt::print("Get deployment list for namespace '{}':\n", k8s_namespace);
+                //fmt::print("Get deployment list for namespace '{}':\n", k8s_namespace);
 
                 listEntry_t *listEntry = NULL;
                 v1_deployment_t *deployment = NULL;
                 list_ForEach(listEntry, deployment_list->items) {
                     deployment = (v1_deployment_t *)listEntry->data;
-                    fmt::print("\tThe deployment name: {}\n", deployment->metadata->name);
+                    //fmt::print("\tThe deployment name: {}\n", deployment->metadata->name);
+                    deployments.push_back( json{ {"namespace", k8s_namespace}, {"type","deployment"}, {"name", deployment->metadata->name} } );
                 }
                 v1_deployment_list_free(deployment_list);
                 deployment_list = NULL;
@@ -221,13 +257,16 @@ namespace kubepp{
 
         }
 
+        return deployments;
 
     }
 
 
-    void KubernetesClient::listEvents( const vector<string>& k8s_namespaces ) const{
+    json KubernetesClient::getEvents( const vector<string>& k8s_namespaces ) const{
 
         auto namespaces = this->resolveNamespaces(k8s_namespaces);
+
+        json events = json::array();
 
         for( const string& k8s_namespace : namespaces ){
 
@@ -251,13 +290,14 @@ namespace kubepp{
 
             if( event_list ){
 
-                fmt::print("Get event list for namespace '{}':\n", k8s_namespace);
+                //fmt::print("Get event list for namespace '{}':\n", k8s_namespace);
 
                 listEntry_t *listEntry = NULL;
                 core_v1_event_t *event = NULL;
                 list_ForEach(listEntry, event_list->items) {
                     event = (core_v1_event_t *)listEntry->data;
-                    fmt::print("\tThe event name: {}\n", event->metadata->name);
+                    //fmt::print("\tThe event name: {}\n", event->metadata->name);
+                    events.push_back( json{ {"namespace", k8s_namespace}, {"type", "event"}, {"name", event->metadata->name} } );
                 }
                 core_v1_event_list_free(event_list);
                 event_list = NULL;
@@ -269,6 +309,44 @@ namespace kubepp{
             }
 
         }
+
+        return events;
+
+    }
+
+
+    json KubernetesClient::getPodLogs( const string& k8s_namespace, const string& pod_name, const string& container ) const{
+
+
+        json logs = json::object();
+
+            // read log of the specified Pod
+            //
+            //char* CoreV1API_readNamespacedPodLog(apiClient_t *apiClient, char *name, char *_namespace, char *container, int *follow, int *insecureSkipTLSVerifyBackend, int *limitBytes, char *pretty, int *previous, int *sinceSeconds, int *tailLines, int *timestamps);
+
+            char* log = CoreV1API_readNamespacedPodLog(const_cast<apiClient_t*>(api_client.get()), 
+                                                const_cast<char*>(pod_name.c_str()),   /*name */
+                                                const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+                                                const_cast<char*>(container.c_str()),    /* container */
+                                                NULL,    /* follow */
+                                                NULL,    /* insecureSkipTLSVerifyBackend */
+                                                NULL,    /* limitBytes */
+                                                NULL,    /* pretty */
+                                                NULL,    /* previous */
+                                                NULL,    /* sinceSeconds */
+                                                NULL,    /* tailLines */
+                                                NULL     /* timestamps */
+            );
+
+            if( log ){
+
+                logs = json{ {"namespace", k8s_namespace}, {"type", "log"}, {"name", pod_name}, {"container", container}, {"log", string(log) } };
+                free(log);
+
+            }
+
+        return logs;
+
 
     }
 

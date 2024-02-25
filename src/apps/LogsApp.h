@@ -20,7 +20,7 @@ namespace kubepp::apps {
             void run(){
 
                 KubernetesClient kube_client;
-                kube_client.displayEvents();
+                kube_client.displayLogs();
                 
             }
 

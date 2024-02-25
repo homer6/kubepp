@@ -15,6 +15,9 @@ using std::set;
 
 #include <memory>
 
+#include "json_fwd.hpp"
+using json = nlohmann::json;
+
 
 namespace kubepp{
 
@@ -27,10 +30,12 @@ namespace kubepp{
 
             void displayWorkloads() const;
             void displayEvents() const;
+            void displayLogs() const;
             
-            void listPods( const vector<string>& k8s_namespaces = { "all" } ) const;
-            void listDeployments( const vector<string>& k8s_namespaces = { "all" } ) const;
-            void listEvents( const vector<string>& k8s_namespaces = { "all" } ) const;
+            json getPods( const vector<string>& k8s_namespaces = { "all" } ) const;
+            json getDeployments( const vector<string>& k8s_namespaces = { "all" } ) const;
+            json getEvents( const vector<string>& k8s_namespaces = { "all" } ) const;
+            json getPodLogs( const string& k8s_namespace, const string& pod_name, const string& container ) const;
 
             vector<string> getNamespaces() const;
             set<string> resolveNamespaces( const vector<string>& k8s_namespaces = { "all" } ) const;
