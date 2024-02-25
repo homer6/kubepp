@@ -514,35 +514,26 @@ namespace kubepp{
 
         json response = json::object();
 
-        // Convert the nlohmann JSON object to a JSON string and then parse it into a cJSON object
-        const string json_string = custom_resource_definition.dump();
-        cJSON* json_c = cJSON_Parse(json_string.c_str());
-        if( !json_c ){
+        cjson crd_cjson(custom_resource_definition);
+        if( !crd_cjson ){
             fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
             throw std::runtime_error("Cannot parse the custom resource definition JSON.");
         }
 
         // Now, use the cJSON object to parse into the v1_custom_resource_definition_t structure
-        v1_custom_resource_definition_t* crd = v1_custom_resource_definition_parseFromJSON(json_c);
+        v1_custom_resource_definition_t* crd = v1_custom_resource_definition_parseFromJSON(crd_cjson.get());
         v1_custom_resource_definition_t* created_custom_resource_definition = ApiextensionsV1API_createCustomResourceDefinition(const_cast<apiClient_t*>(api_client.get()), crd, NULL, NULL, NULL, NULL);
 
-        if (created_custom_resource_definition) {
-            cJSON* cjson_response = v1_custom_resource_definition_convertToJSON(created_custom_resource_definition);
-
-            // Convert cJSON to nlohmann JSON
-            response = json::parse(cJSON_Print(cjson_response));
-
-            // Free the cJSON
-            cJSON_Delete(cjson_response);
+        if( created_custom_resource_definition ){
+            cjson cjson_response(v1_custom_resource_definition_convertToJSON(created_custom_resource_definition));
+            if( !cjson_response ){
+                return response;
+            }
+            response = cjson_response.toJson();
 
             // Free the created custom resource definition object
             v1_custom_resource_definition_free(created_custom_resource_definition);
-        } else {
-            fmt::print("Cannot create a custom resource definition.\n");
         }
-
-        // Free the cJSON object
-        cJSON_Delete(json_c);
 
         // Free the original CRD object
         v1_custom_resource_definition_free(crd);
@@ -556,21 +547,6 @@ namespace kubepp{
             
         json response = json::object();
 
-        // Convert the nlohmann JSON object to a JSON string and then parse it into a cJSON object
-        const string json_string = custom_resource_definition.dump();
-        cJSON* json_c = cJSON_Parse(json_string.c_str());
-        if( !json_c ){
-            fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
-            throw std::runtime_error("Cannot parse the custom resource definition JSON.");
-        }
-
-        // Now, use the cJSON object to parse into the v1_delete_options_t structure
-        v1_delete_options_t* delete_options = v1_delete_options_parseFromJSON(json_c);
-        if( !delete_options ){
-            cJSON_Delete(json_c);
-            throw std::runtime_error("Cannot parse the delete options JSON.");
-        }
-
         //check to see if the name is specified
         if( !custom_resource_definition.contains("metadata") || !custom_resource_definition["metadata"].contains("name") || !custom_resource_definition["metadata"]["name"].is_string() || custom_resource_definition["metadata"]["name"].get<string>().empty() ){
             throw std::runtime_error("The custom resource definition must have a 'metadata.name' field that is a non-empty string.");
@@ -580,34 +556,25 @@ namespace kubepp{
         v1_status_t* status = ApiextensionsV1API_deleteCustomResourceDefinition(
                                             const_cast<apiClient_t*>(api_client.get()), 
                                             const_cast<char*>(name.c_str()),
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            delete_options
+                                            NULL, /* pretty */
+                                            NULL, /* dryRun */
+                                            NULL, /* gracePeriodSeconds */
+                                            NULL, /* orphanDependents */
+                                            NULL, /* propagationPolicy */
+                                            NULL  /* delete options */
         );
 
-        if (status) {
-            cJSON* cjson_response = v1_status_convertToJSON(status);
 
-            // Convert cJSON to nlohmann JSON
-            response = json::parse(cJSON_Print(cjson_response));
-
-            // Free the cJSON
-            cJSON_Delete(cjson_response);
+        if( status ){
+            cjson cjson_response(v1_status_convertToJSON(status));
+            if( !cjson_response ){
+                return response;
+            }
+            response = cjson_response.toJson();
 
             // Free the status object
             v1_status_free(status);
-        } else {
-            fmt::print("Cannot delete a custom resource definition.\n");
         }
-
-        // Free the cJSON object
-        cJSON_Delete(json_c);
-
-        // Free the original delete options object
-        v1_delete_options_free(delete_options);
 
         return response;
 
@@ -620,8 +587,6 @@ namespace kubepp{
     json KubernetesClient::createPod( const json& pod ) const{
 
         json response = json::object();
-
-        // Convert the nlohmann JSON object to a JSON string and then parse it into a cJSON object
 
         cjson pod_cjson(pod);
         if( !pod_cjson ){
@@ -653,13 +618,11 @@ namespace kubepp{
             if( !cjson_response ){
                 return response;
             }
-
-            // Convert cJSON to nlohmann JSON
             response = cjson_response.toJson();
 
             // Free the created pod object
             v1_pod_free(created_pod);
-            
+
         } else {
             fmt::print("Cannot create a pod.\n");
         }
