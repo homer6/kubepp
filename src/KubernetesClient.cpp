@@ -160,71 +160,62 @@ namespace kubepp{
 
         for( const string& k8s_namespace : namespaces ){
 
-            v1_pod_list_t *pod_list = NULL;
-            pod_list = CoreV1API_listNamespacedPod(const_cast<apiClient_t*>(api_client.get()), 
-                                                const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-                                                NULL,    /* pretty */
-                                                NULL,    /* allowWatchBookmarks */
-                                                NULL,    /* continue */
-                                                NULL,    /* fieldSelector */
-                                                NULL,    /* labelSelector */
-                                                NULL,    /* limit */
-                                                NULL,    /* resourceVersion */
-                                                NULL,    /* resourceVersionMatch */
-                                                NULL,    /* sendInitialEvents */
-                                                NULL,    /* timeoutSeconds */
-                                                NULL     /* watch */
-                );
+            std::shared_ptr<v1_pod_list_t> pod_list( 
+                                                    CoreV1API_listNamespacedPod(const_cast<apiClient_t*>(api_client.get()), 
+                                                        const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+                                                        NULL,    /* pretty */
+                                                        NULL,    /* allowWatchBookmarks */
+                                                        NULL,    /* continue */
+                                                        NULL,    /* fieldSelector */
+                                                        NULL,    /* labelSelector */
+                                                        NULL,    /* limit */
+                                                        NULL,    /* resourceVersion */
+                                                        NULL,    /* resourceVersionMatch */
+                                                        NULL,    /* sendInitialEvents */
+                                                        NULL,    /* timeoutSeconds */
+                                                        NULL     /* watch */
+                                                    ),
+                                                    v1_pod_list_free
+                                                );
+
 
             //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
 
             if( pod_list ){
 
-                //fmt::print("Get pod list for namespace '{}':\n", k8s_namespace);
+                fmt::print("Get pod list for namespace '{}':\n", k8s_namespace);
+
+                // cjson cjson_pod_list( v1_pod_list_convertToJSON(pod_list.get()) );
+
+                // if( cjson_pod_list ){
+                //     pods = cjson_pod_list.toJson();
+                // }
+
 
                 listEntry_t *listEntry = NULL;
                 v1_pod_t *pod = NULL;
-                list_ForEach(listEntry, pod_list->items) {
-                    pod = (v1_pod_t *)listEntry->data;
-                    //fmt::print("\tThe pod name: {}\n", pod->metadata->name);
-                    
 
-                    // add the container names
-                    json containers = json::array();
-                    listEntry_t *container_list_entry = NULL;
-                    v1_container_t *container = NULL;
-                    list_ForEach(container_list_entry, pod->spec->containers) {
-                        container = (v1_container_t *)container_list_entry->data;
-                        containers.push_back( container->name );
-                    }
-                    
+                //iterate through the list of pods
+
+                list_ForEach(listEntry, pod_list->items) {
+
+                    pod = (v1_pod_t *)listEntry->data;
+
                     json pod_json = json::object();
 
                     pod_json["namespace"] = k8s_namespace;
                     pod_json["type"] = "pod";
-                    pod_json["name"] = string(pod->metadata->name);
-                    pod_json["containers"] = containers;
+                    //pod_json["name"] = if( pod->metadata->name )  string(pod->metadata->name);
+                    //pod_json["api_version"] = string(pod->api_version);
+                    //pod_json["kind"] = string(pod->kind);
+                    pod_json["metadata"] = cjson( v1_object_meta_convertToJSON(pod->metadata) ).toJson();
+                    pod_json["spec"] = cjson( v1_pod_spec_convertToJSON(pod->spec) ).toJson();
+                    pod_json["status"] = cjson( v1_pod_status_convertToJSON(pod->status) ).toJson();
 
-                    json container_statuses = json::array();
-                    listEntry_t *container_status_list_entry = NULL;
-                    v1_container_status_t *container_status = NULL;
-                    list_ForEach(container_status_list_entry, pod->status->container_statuses) {
-                        container_status = (v1_container_status_t *)container_status_list_entry->data;
-
-                        json container_status_json = json::object();
-                        container_status_json["name"] = string(container_status->name);
-                        container_status_json["ready"] = container_status->ready;
-                        
-                        container_statuses.push_back(container_status_json);
-                    }
-                    pod_json["container_statuses"] = container_statuses;
-
-                    
                     pods.push_back(pod_json);
 
                 }
-                v1_pod_list_free(pod_list);
-                pod_list = NULL;
+                
 
             }else{
 

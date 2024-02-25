@@ -70,12 +70,18 @@ namespace kubepp{
         return this->cjson_ptr.get();
     }
 
-    cjson::operator json() const{        
+    cjson::operator json() const{
+        if( !this->cjson_ptr.get() ){
+            return json();
+        }
         std::shared_ptr<char> json_string_ptr( cJSON_PrintUnformatted( this->cjson_ptr.get() ), cJSON_free );
         return json::parse( json_string_ptr.get() );
     }
 
     cjson::operator std::string() const{
+        if( !this->cjson_ptr.get() ){
+            return string();
+        }
         std::shared_ptr<char> json_string_ptr( cJSON_PrintUnformatted( this->cjson_ptr.get() ), cJSON_free );
         return string( json_string_ptr.get() );
     }
@@ -85,6 +91,9 @@ namespace kubepp{
     }
 
     json cjson::toJson() const{
+        if( !this->cjson_ptr.get() ){
+            return json();
+        }            
         return *this;
     }
 
