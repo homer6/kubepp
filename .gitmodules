@@ -1,3 +1,0 @@
-[submodule "lib/kubernetes-c-client"]
-	path = lib/kubernetes-c-client
-	url = https://github.com/kubernetes-client/c.git
