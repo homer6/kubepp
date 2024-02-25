@@ -39,10 +39,10 @@ namespace kubepp{
         }
 
         fmt::print("The detected base path: {}\n", detected_base_path);
-        fmt::print("Length of detected base path: {}\n", strlen(detected_base_path));
-        cout << endl;
-        fmt::print("The base path: {}\n", base_path);        
-        fmt::print("Length of base path: {}\n", strlen(base_path.c_str()));
+        // fmt::print("Length of detected base path: {}\n", strlen(detected_base_path));
+        // cout << endl;
+        // fmt::print("The base path: {}\n", base_path);        
+        // fmt::print("Length of base path: {}\n", strlen(base_path.c_str()));
 
         //apiClient = std::shared_ptr<apiClient_t>( apiClient_create_with_base_path(const_cast<char*>(base_path.c_str()), sslConfig, apiKeys), apiClient_free);
         this->api_client = std::shared_ptr<apiClient_t>( apiClient_create_with_base_path(detected_base_path, sslConfig, apiKeys), apiClient_free);
@@ -108,22 +108,25 @@ namespace kubepp{
     }
 
 
-    vector<string> KubernetesClient::getNamespaces() const{
+    vector<string> KubernetesClient::getNamespaceNames() const{
 
-        v1_namespace_list_t *namespace_list = NULL;
-        namespace_list = CoreV1API_listNamespace(const_cast<apiClient_t*>(api_client.get()), 
-                                                NULL,    /* pretty */
-                                                NULL,    /* allowWatchBookmarks */
-                                                NULL,    /* continue */
-                                                NULL,    /* fieldSelector */
-                                                NULL,    /* labelSelector */
-                                                NULL,    /* limit */
-                                                NULL,    /* resourceVersion */
-                                                NULL,    /* resourceVersionMatch */
-                                                NULL,    /* sendInitialEvents */
-                                                NULL,    /* timeoutSeconds */
-                                                NULL     /* watch */
-        );
+        std::shared_ptr<v1_namespace_list_t> namespace_list( 
+                                                CoreV1API_listNamespace(
+                                                    const_cast<apiClient_t*>(api_client.get()), 
+                                                    NULL,    /* pretty */
+                                                    NULL,    /* allowWatchBookmarks */
+                                                    NULL,    /* continue */
+                                                    NULL,    /* fieldSelector */
+                                                    NULL,    /* labelSelector */
+                                                    NULL,    /* limit */
+                                                    NULL,    /* resourceVersion */
+                                                    NULL,    /* resourceVersionMatch */
+                                                    NULL,    /* sendInitialEvents */
+                                                    NULL,    /* timeoutSeconds */
+                                                    NULL     /* watch */
+                                                ), 
+                                                v1_namespace_list_free
+                                            );
 
         vector<string> namespaces;
 
@@ -135,12 +138,10 @@ namespace kubepp{
                 _namespace = (v1_namespace_t *)listEntry->data;
                 namespaces.push_back(_namespace->metadata->name);
             }
-            v1_namespace_list_free(namespace_list);
-            namespace_list = NULL;
 
         }else{
 
-            spdlog::error("Cannot get any namespace.");
+            spdlog::error("Cannot get any namespace names.");
 
         }
 
@@ -694,7 +695,7 @@ namespace kubepp{
         set<string> namespaces( k8s_namespaces.begin(), k8s_namespaces.end() );
 
         if( namespaces.find("all") != namespaces.end() ){
-            auto all_namespaces = this->getNamespaces();
+            auto all_namespaces = this->getNamespaceNames();
             namespaces.insert(all_namespaces.begin(), all_namespaces.end());
             namespaces.erase("all");
         }
