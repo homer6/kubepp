@@ -186,7 +186,29 @@ namespace kubepp{
                         containers.push_back( container->name );
                     }
                     
-                    pods.push_back( json{ {"namespace", k8s_namespace}, {"type","pod"}, {"name", string(pod->metadata->name)}, {"containers", containers} } );
+                    json pod_json = json::object();
+
+                    pod_json["namespace"] = k8s_namespace;
+                    pod_json["type"] = "pod";
+                    pod_json["name"] = string(pod->metadata->name);
+                    pod_json["containers"] = containers;
+
+                    json container_statuses = json::array();
+                    listEntry_t *container_status_list_entry = NULL;
+                    v1_container_status_t *container_status = NULL;
+                    list_ForEach(container_status_list_entry, pod->status->container_statuses) {
+                        container_status = (v1_container_status_t *)container_status_list_entry->data;
+
+                        json container_status_json = json::object();
+                        container_status_json["name"] = string(container_status->name);
+                        container_status_json["ready"] = container_status->ready;
+                        
+                        container_statuses.push_back(container_status_json);
+                    }
+                    pod_json["container_statuses"] = container_statuses;
+
+                    
+                    pods.push_back(pod_json);
 
                 }
                 v1_pod_list_free(pod_list);
