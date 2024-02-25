@@ -296,8 +296,25 @@ namespace kubepp{
                 core_v1_event_t *event = NULL;
                 list_ForEach(listEntry, event_list->items) {
                     event = (core_v1_event_t *)listEntry->data;
-                    //fmt::print("\tThe event name: {}\n", event->metadata->name);
-                    events.push_back( json{ {"namespace", k8s_namespace}, {"type", "event"}, {"name", event->metadata->name} } );
+
+                    // let's add all of the fields from the event
+
+                    json event_json = json::object();
+                    event_json["namespace"] = k8s_namespace;                    
+                    event_json["type"] = "event";
+
+                    event_json["reason"] = string(event->reason);
+                    event_json["message"] = string(event->message);
+                    event_json["source"] = json{ {"component", string(event->source->component)}, {"host", string(event->source->host)} };
+                    event_json["first_timestamp"] = string(event->first_timestamp);
+                    event_json["last_timestamp"] = string(event->last_timestamp);
+                    event_json["count"] = event->count;
+                    event_json["event_type"] = string(event->type);
+                    event_json["reporting_component"] = string(event->reporting_component);
+                    event_json["reporting_instance"] = string(event->reporting_instance);
+
+                    events.push_back(event_json);
+
                 }
                 core_v1_event_list_free(event_list);
                 event_list = NULL;
