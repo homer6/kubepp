@@ -357,7 +357,12 @@ namespace kubepp{
 
             if( log ){
 
-                logs = json{ {"namespace", k8s_namespace}, {"type", "log"}, {"name", pod_name}, {"container", container}, {"log", string(log) } };
+                logs["namespace"] = k8s_namespace;
+                logs["type"] = "log";
+                logs["name"] = pod_name;
+                logs["container"] = container;
+                logs["log"] = string(log);
+                
                 free(log);
 
             }
