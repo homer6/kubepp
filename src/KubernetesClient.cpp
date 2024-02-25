@@ -430,6 +430,20 @@ namespace kubepp{
 
         if( node_list ){
 
+            /*
+            
+typedef struct v1_node_t {
+    char *api_version; // string
+    char *kind; // string
+    struct v1_object_meta_t *metadata; //model
+    struct v1_node_spec_t *spec; //model
+    struct v1_node_status_t *status; //model
+
+} v1_node_t;
+            
+            */
+
+
             listEntry_t *listEntry = NULL;
             v1_node_t *node = NULL;
             list_ForEach(listEntry, node_list->items) {
@@ -438,6 +452,50 @@ namespace kubepp{
                 json node_json = json::object();
                 node_json["type"] = "node";
                 node_json["name"] = string(node->metadata->name);
+                node_json["creation_timestamp"] = string(node->metadata->creation_timestamp);
+
+
+                node_json["spec"] = json::object();
+                node_json["spec"]["pod_cidr"] = string(node->spec->pod_cidr);
+                node_json["spec"]["provider_id"] = string(node->spec->provider_id);
+                node_json["spec"]["unschedulable"] = node->spec->unschedulable;
+
+
+                // list the taints
+                node_json["taints"] = json::array();
+                listEntry_t *taint_list_entry = NULL;
+                v1_taint_t *taint = NULL;
+                list_ForEach(taint_list_entry, node->spec->taints) {
+                    taint = (v1_taint_t *)taint_list_entry->data;
+                    node_json["taints"].push_back( json{ {"key", string(taint->key)}, {"value", string(taint->value)}, {"effect", string(taint->effect)} } );
+                }
+
+
+                // list the conditions
+                node_json["conditions"] = json::array();
+                listEntry_t *condition_list_entry = NULL;
+                v1_node_condition_t *condition = NULL;
+                list_ForEach(condition_list_entry, node->status->conditions) {
+                    condition = (v1_node_condition_t *)condition_list_entry->data;
+                    node_json["conditions"].push_back( json{ {"type", string(condition->type)}, {"status", string(condition->status)} } );
+                }
+
+
+                // list the node info
+                node_json["node_info"] = json::object();
+                node_json["node_info"]["architecture"] = string(node->status->node_info->architecture);
+                node_json["node_info"]["boot_id"] = string(node->status->node_info->boot_id);
+                node_json["node_info"]["container_runtime_version"] = string(node->status->node_info->container_runtime_version);
+                node_json["node_info"]["kernel_version"] = string(node->status->node_info->kernel_version);
+                node_json["node_info"]["kube_proxy_version"] = string(node->status->node_info->kube_proxy_version);
+                node_json["node_info"]["kubelet_version"] = string(node->status->node_info->kubelet_version);
+                node_json["node_info"]["machine_id"] = string(node->status->node_info->machine_id);
+                node_json["node_info"]["operating_system"] = string(node->status->node_info->operating_system);
+                node_json["node_info"]["os_image"] = string(node->status->node_info->os_image);
+                node_json["node_info"]["system_uuid"] = string(node->status->node_info->system_uuid);
+
+
+                // list the addresses
                 node_json["addresses"] = json::array();
                 listEntry_t *address_list_entry = NULL;
                 v1_node_address_t *address = NULL;
@@ -445,7 +503,9 @@ namespace kubepp{
                     address = (v1_node_address_t *)address_list_entry->data;
                     node_json["addresses"].push_back( json{ {"type", string(address->type)}, {"address", string(address->address)} } );
                 }
+
                 nodes.push_back(node_json);
+                
             }
             v1_node_list_free(node_list);
             node_list = NULL;
