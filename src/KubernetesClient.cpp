@@ -24,6 +24,8 @@ using std::cerr;
 
 #include "json.hpp"
 
+#include "cjson.h"
+
 
 namespace kubepp{
 
@@ -431,20 +433,6 @@ namespace kubepp{
 
         if( node_list ){
 
-            /*
-            
-typedef struct v1_node_t {
-    char *api_version; // string
-    char *kind; // string
-    struct v1_object_meta_t *metadata; //model
-    struct v1_node_spec_t *spec; //model
-    struct v1_node_status_t *status; //model
-
-} v1_node_t;
-            
-            */
-
-
             listEntry_t *listEntry = NULL;
             v1_node_t *node = NULL;
             list_ForEach(listEntry, node_list->items) {
@@ -564,14 +552,79 @@ typedef struct v1_node_t {
     }
 
 
+    json KubernetesClient::deleteCustomResourceDefinition( const json& custom_resource_definition ) const{
+            
+        json response = json::object();
+
+        // Convert the nlohmann JSON object to a JSON string and then parse it into a cJSON object
+        const string json_string = custom_resource_definition.dump();
+        cJSON* json_c = cJSON_Parse(json_string.c_str());
+        if( !json_c ){
+            fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
+            throw std::runtime_error("Cannot parse the custom resource definition JSON.");
+        }
+
+        // Now, use the cJSON object to parse into the v1_delete_options_t structure
+        v1_delete_options_t* delete_options = v1_delete_options_parseFromJSON(json_c);
+        if( !delete_options ){
+            cJSON_Delete(json_c);
+            throw std::runtime_error("Cannot parse the delete options JSON.");
+        }
+
+        //check to see if the name is specified
+        if( !custom_resource_definition.contains("metadata") || !custom_resource_definition["metadata"].contains("name") || !custom_resource_definition["metadata"]["name"].is_string() || custom_resource_definition["metadata"]["name"].get<string>().empty() ){
+            throw std::runtime_error("The custom resource definition must have a 'metadata.name' field that is a non-empty string.");
+        }
+        const string name = custom_resource_definition["metadata"]["name"].get<string>();
+
+        v1_status_t* status = ApiextensionsV1API_deleteCustomResourceDefinition(
+                                            const_cast<apiClient_t*>(api_client.get()), 
+                                            const_cast<char*>(name.c_str()),
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            delete_options
+        );
+
+        if (status) {
+            cJSON* cjson_response = v1_status_convertToJSON(status);
+
+            // Convert cJSON to nlohmann JSON
+            response = json::parse(cJSON_Print(cjson_response));
+
+            // Free the cJSON
+            cJSON_Delete(cjson_response);
+
+            // Free the status object
+            v1_status_free(status);
+        } else {
+            fmt::print("Cannot delete a custom resource definition.\n");
+        }
+
+        // Free the cJSON object
+        cJSON_Delete(json_c);
+
+        // Free the original delete options object
+        v1_delete_options_free(delete_options);
+
+        return response;
+
+    }
+
+
+
+
+
     json KubernetesClient::createPod( const json& pod ) const{
 
         json response = json::object();
 
         // Convert the nlohmann JSON object to a JSON string and then parse it into a cJSON object
-        const string json_string = pod.dump();
-        cJSON* json_c = cJSON_Parse(json_string.c_str());
-        if( !json_c ){
+
+        cjson pod_cjson(pod);
+        if( !pod_cjson ){
             fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
             throw std::runtime_error("Cannot parse the pod JSON.");
         }
@@ -583,7 +636,7 @@ typedef struct v1_node_t {
         const string k8s_namespace = pod["metadata"]["namespace"].get<string>();
 
         // Now, use the cJSON object to parse into the v1_pod_t structure
-        v1_pod_t* pod_type = v1_pod_parseFromJSON(json_c);
+        v1_pod_t* pod_type = v1_pod_parseFromJSON(pod_cjson.get());
         v1_pod_t* created_pod = CoreV1API_createNamespacedPod(
                                             const_cast<apiClient_t*>(api_client.get()),                                            
                                             const_cast<char*>(k8s_namespace.c_str()),
@@ -594,29 +647,80 @@ typedef struct v1_node_t {
                                             NULL
         );
 
-        if (created_pod) {
-            cJSON* cjson_response = v1_pod_convertToJSON(created_pod);
+        if( created_pod ){
+
+            cjson cjson_response(v1_pod_convertToJSON(created_pod));
+            if( !cjson_response ){
+                return response;
+            }
 
             // Convert cJSON to nlohmann JSON
-            response = json::parse(cJSON_Print(cjson_response));
-
-            // Free the cJSON
-            cJSON_Delete(cjson_response);
+            response = cjson_response.toJson();
 
             // Free the created pod object
             v1_pod_free(created_pod);
+            
         } else {
             fmt::print("Cannot create a pod.\n");
         }
-
-        // Free the cJSON object
-        cJSON_Delete(json_c);
 
         // Free the original pod object
         v1_pod_free(pod_type);
 
         return response;
         
+    }
+
+
+    json KubernetesClient::deletePod( const json& pod ) const{
+
+        json response = json::object();
+
+        //check to see if the namespace is specified
+        if( !pod.contains("metadata") || !pod["metadata"].contains("namespace") || !pod["metadata"]["namespace"].is_string() || pod["metadata"]["namespace"].get<string>().empty() ){
+            throw std::runtime_error("The pod must have a 'metadata.namespace' field that is a non-empty string.");
+        }
+        const string k8s_namespace = pod["metadata"]["namespace"].get<string>();
+
+        //check to see if the name is specified
+        if( !pod.contains("metadata") || !pod["metadata"].contains("name") || !pod["metadata"]["name"].is_string() || pod["metadata"]["name"].get<string>().empty() ){
+            throw std::runtime_error("The pod must have a 'metadata.name' field that is a non-empty string.");
+        }
+        const string pod_name = pod["metadata"]["name"].get<string>();
+
+
+        v1_pod_t* pod_object = CoreV1API_deleteNamespacedPod(
+                                            const_cast<apiClient_t*>(api_client.get()), 
+                                            const_cast<char*>(pod_name.c_str()),
+                                            const_cast<char*>(k8s_namespace.c_str()),
+                                            NULL, /* pretty */                                            
+                                            NULL, /* dryRun */
+                                            NULL, /* gracePeriodSeconds */
+                                            NULL, /* orphanDependents */
+                                            NULL, /* propagationPolicy */
+                                            NULL /* delete options */  
+        );
+
+
+        if( pod_object ){
+
+            cjson cjson_response(v1_pod_convertToJSON(pod_object));
+            if( !cjson_response ){
+                return response;
+            }
+
+            // Convert cJSON to nlohmann JSON
+            response = cjson_response.toJson();
+
+            // Free the pod object
+            v1_pod_free(pod_object);  
+
+        }else{
+            fmt::print("Cannot delete a pod.\n");
+        }
+
+        return response;
+
     }
 
 
@@ -694,4 +798,60 @@ typedef struct v1_node_t {
     }
 
 
+
+    json KubernetesClient::deleteResources( const json& resources ) const{
+
+        //if the resources is an array, then iterate through the array and delete each resource
+
+        if( resources.is_array() ){
+
+            json responses = json::array();
+
+            for( const auto& resource : resources ){
+
+                responses.push_back( this->deleteResource(resource) );
+
+            }
+
+            return responses;
+
+        }else{
+
+            return this->deleteResource(resources);
+
+        }
+
+    }
+
+
+    json KubernetesClient::deleteResource( const json& resource ) const{
+
+        if( !resource.is_object() ){
+            throw std::runtime_error("The resource must be a JSON object.");
+        }
+
+        json response = json::object();
+
+        // determine the kind of resource
+
+        // ensure that the resource has a 'kind' field
+        if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
+            throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
+        }
+        string kind = resource["kind"].get<string>();
+
+
+        if( kind == "CustomResourceDefinition" ){
+            response = this->deleteCustomResourceDefinition(resource);
+        }else if( kind == "Pod" ){
+            response = this->deletePod(resource);
+        }else{
+            fmt::print("The kind of resource, '{}', is not supported.\n", kind);
+            throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
+        }
+
+        return response;
+
+    }
+    
 }

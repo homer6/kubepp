@@ -20,7 +20,7 @@ namespace kubepp::apps {
 
         public:
 
-            void run(){
+            void createSample(){
 
                 KubernetesClient kube_client;
                 
@@ -47,6 +47,26 @@ namespace kubepp::apps {
                 })"_json;
 
                 json response = kube_client.createResources( pod_sample );
+
+                cout << response.dump(4) << endl;
+                
+            }
+
+
+            void deleteSample(){
+
+                KubernetesClient kube_client;
+                
+                json pod_sample = R"({
+                    "apiVersion": "v1",
+                    "kind": "Pod",
+                    "metadata": {
+                        "namespace": "default",
+                        "name": "nginx"
+                    }
+                })"_json;
+
+                json response = kube_client.deleteResources( pod_sample );
 
                 cout << response.dump(4) << endl;
                 

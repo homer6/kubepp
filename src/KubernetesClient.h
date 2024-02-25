@@ -47,10 +47,23 @@ namespace kubepp{
             json createResource( const json& resource ) const;
             
 
+            /* Deletes many resources or one resource. Accepts and array or an object. Returns the json responses.*/
+            json deleteResources( const json& resources ) const;
+
+            /* Deletes a single resource. Accepts an object. Returns the json response.*/
+            json deleteResource( const json& resource ) const;
+
+
             
             /* Prefer using the createResources method instead, which will detect the type of resources automatically. */
             json createCustomResourceDefinition( const json& custom_resource_definition ) const;
+            json deleteCustomResourceDefinition( const json& custom_resource_definition ) const;
+
             json createPod( const json& pod ) const;
+            json deletePod( const json& pod ) const;
+
+
+
 
 
             //doesn't work yet; needs debugging

@@ -20,10 +20,10 @@ namespace kubepp::apps {
 
         public:
 
-            void run(){
+
+            void createSample(){
 
                 KubernetesClient kube_client;
-                
                 
                 json crd = R"({
                     "apiVersion": "apiextensions.k8s.io/v1",
@@ -72,8 +72,29 @@ namespace kubepp::apps {
                 json response = kube_client.createResources( crd );
 
                 cout << response.dump(4) << endl;
-                
+                                
             }
+
+
+
+            void deleteSample(){
+
+                KubernetesClient kube_client;
+                
+                json crd = R"({
+                    "apiVersion": "apiextensions.k8s.io/v1",
+                    "kind": "CustomResourceDefinition",
+                    "metadata": {
+                        "name": "exampleresources.example.com"
+                    }
+                })"_json;
+
+                json response = kube_client.deleteResources( crd );
+
+                cout << response.dump(4) << endl;
+                                
+            }
+
 
     };
 
