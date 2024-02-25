@@ -37,6 +37,10 @@ int main(int argc, char **argv) {
     // CRDs command
         CLI::App *crds_app = app.add_subcommand("crds", "Manage custom resource definitions.");
 
+    // Pod command
+
+        CLI::App *pod_app = app.add_subcommand("pods", "Manage pods.");
+
 
     // parse the command line arguments
 
@@ -78,6 +82,14 @@ int main(int argc, char **argv) {
             else if( *crds_app ){
 
                 kubepp_app.crds_app.run();
+
+            }
+
+        // Pod command
+
+            else if( *pod_app ){
+
+                kubepp_app.pod_app.run();
 
             }
 

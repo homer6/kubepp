@@ -38,10 +38,19 @@ namespace kubepp{
             json getEvents( const vector<string>& k8s_namespaces = { "all" } ) const;
             json getNodes() const;
 
+
+
+            /* Creates many resources or one resource. Accepts and array or an object. Returns the json responses.*/
+            json createResources( const json& resources ) const;
+            
+            /* Creates a single resource. Accepts an object. Returns the json response.*/
+            json createResource( const json& resource ) const;
             
 
-            json createCustomResourceDefinition( const json& custom_resource_definition ) const;
             
+            /* Prefer using the createResources method instead, which will detect the type of resources automatically. */
+            json createCustomResourceDefinition( const json& custom_resource_definition ) const;
+            json createPod( const json& pod ) const;
 
 
             //doesn't work yet; needs debugging

@@ -69,7 +69,7 @@ namespace kubepp::apps {
                     }
                 })"_json;
 
-                json response = kube_client.createCustomResourceDefinition( crd );
+                json response = kube_client.createResources( crd );
 
                 cout << response.dump(4) << endl;
                 

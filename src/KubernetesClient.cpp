@@ -564,6 +564,62 @@ typedef struct v1_node_t {
     }
 
 
+    json KubernetesClient::createPod( const json& pod ) const{
+
+        json response = json::object();
+
+        // Convert the nlohmann JSON object to a JSON string and then parse it into a cJSON object
+        const string json_string = pod.dump();
+        cJSON* json_c = cJSON_Parse(json_string.c_str());
+        if( !json_c ){
+            fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
+            throw std::runtime_error("Cannot parse the pod JSON.");
+        }
+        
+        //check to see if the namespace is specified
+        if( !pod.contains("metadata") || !pod["metadata"].contains("namespace") || !pod["metadata"]["namespace"].is_string() || pod["metadata"]["namespace"].get<string>().empty() ){
+            throw std::runtime_error("The pod must have a 'metadata.namespace' field that is a non-empty string.");
+        }
+        const string k8s_namespace = pod["metadata"]["namespace"].get<string>();
+
+        // Now, use the cJSON object to parse into the v1_pod_t structure
+        v1_pod_t* pod_type = v1_pod_parseFromJSON(json_c);
+        v1_pod_t* created_pod = CoreV1API_createNamespacedPod(
+                                            const_cast<apiClient_t*>(api_client.get()),                                            
+                                            const_cast<char*>(k8s_namespace.c_str()),
+                                            pod_type,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            NULL
+        );
+
+        if (created_pod) {
+            cJSON* cjson_response = v1_pod_convertToJSON(created_pod);
+
+            // Convert cJSON to nlohmann JSON
+            response = json::parse(cJSON_Print(cjson_response));
+
+            // Free the cJSON
+            cJSON_Delete(cjson_response);
+
+            // Free the created pod object
+            v1_pod_free(created_pod);
+        } else {
+            fmt::print("Cannot create a pod.\n");
+        }
+
+        // Free the cJSON object
+        cJSON_Delete(json_c);
+
+        // Free the original pod object
+        v1_pod_free(pod_type);
+
+        return response;
+        
+    }
+
+
 
     set<string> KubernetesClient::resolveNamespaces( const vector<string>& k8s_namespaces ) const{
 
@@ -579,5 +635,63 @@ typedef struct v1_node_t {
         return namespaces;
 
     }
+
+
+
+    json KubernetesClient::createResources( const json& resources ) const{
+
+        //if the resources is an array, then iterate through the array and create each resource
+
+        if( resources.is_array() ){
+
+            json responses = json::array();
+
+            for( const auto& resource : resources ){
+
+                responses.push_back( this->createResource(resource) );
+
+            }
+
+            return responses;
+
+        }else{
+
+            return this->createResource(resources);
+
+        }
+
+    }
+
+    
+    json KubernetesClient::createResource( const json& resource ) const{
+
+        if( !resource.is_object() ){
+            throw std::runtime_error("The resource must be a JSON object.");
+        }
+
+        json response = json::object();
+
+        // determine the kind of resource
+
+        // ensure that the resource has a 'kind' field
+        if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
+            throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
+        }
+        string kind = resource["kind"].get<string>();
+
+
+        if( kind == "CustomResourceDefinition" ){
+            response = this->createCustomResourceDefinition(resource);
+        }else if( kind == "Pod" ){
+            response = this->createPod(resource);        
+        }else{
+            fmt::print("The kind of resource, '{}', is not supported.\n", kind);
+            throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
+        }
+
+        return response;
+
+    }
+
 
 }
