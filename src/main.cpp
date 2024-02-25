@@ -30,6 +30,9 @@ int main(int argc, char **argv) {
     // Workloads command
         CLI::App *workloads_app = app.add_subcommand("workloads", "Manage workloads.");
 
+    // Nodes command
+        CLI::App *nodes_app = app.add_subcommand("nodes", "Manage nodes.");
+
 
     // parse the command line arguments
 
@@ -55,6 +58,14 @@ int main(int argc, char **argv) {
             else if( *workloads_app ){
 
                 kubepp_app.workloads_app.run();
+
+            }
+
+        // Nodes command
+
+            else if( *nodes_app ){
+
+                kubepp_app.nodes_app.run();
 
             }
 

@@ -97,6 +97,14 @@ namespace kubepp{
     }
 
 
+    void KubernetesClient::displayNodes() const{
+
+        spdlog::info( "Listing nodes:" );
+        cout << this->getNodes().dump(4) << endl;
+
+    }
+
+
     vector<string> KubernetesClient::getNamespaces() const{
 
         v1_namespace_list_t *namespace_list = NULL;
@@ -399,6 +407,60 @@ namespace kubepp{
 
 
     }
+
+
+    json KubernetesClient::getNodes() const{
+
+        json nodes = json::array();
+
+        v1_node_list_t *node_list = NULL;
+        node_list = CoreV1API_listNode(const_cast<apiClient_t*>(api_client.get()), 
+                                            NULL,    /* pretty */
+                                            NULL,    /* allowWatchBookmarks */
+                                            NULL,    /* continue */
+                                            NULL,    /* fieldSelector */
+                                            NULL,    /* labelSelector */
+                                            NULL,    /* limit */
+                                            NULL,    /* resourceVersion */
+                                            NULL,    /* resourceVersionMatch */
+                                            NULL,    /* sendInitialEvents */
+                                            NULL,    /* timeoutSeconds */
+                                            NULL     /* watch */
+        );
+
+        if( node_list ){
+
+            listEntry_t *listEntry = NULL;
+            v1_node_t *node = NULL;
+            list_ForEach(listEntry, node_list->items) {
+                node = (v1_node_t *)listEntry->data;
+
+                json node_json = json::object();
+                node_json["type"] = "node";
+                node_json["name"] = string(node->metadata->name);
+                node_json["addresses"] = json::array();
+                listEntry_t *address_list_entry = NULL;
+                v1_node_address_t *address = NULL;
+                list_ForEach(address_list_entry, node->status->addresses) {
+                    address = (v1_node_address_t *)address_list_entry->data;
+                    node_json["addresses"].push_back( json{ {"type", string(address->type)}, {"address", string(address->address)} } );
+                }
+                nodes.push_back(node_json);
+            }
+            v1_node_list_free(node_list);
+            node_list = NULL;
+
+        }else{
+
+            fmt::print("Cannot get any nodes.\n");
+
+        }
+
+        return nodes;
+
+    }
+
+
 
 
     set<string> KubernetesClient::resolveNamespaces( const vector<string>& k8s_namespaces ) const{
