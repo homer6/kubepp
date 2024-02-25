@@ -1,6 +1,6 @@
 # Kubepp
 
-A modern C++ wrapper around the official Kubernetes C client.
+A modern C++ wrapper around the official Kubernetes C client. Pronounced "kube-plus-plus."
 
 https://github.com/homer6/kubepp
 
