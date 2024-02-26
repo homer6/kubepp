@@ -34,8 +34,8 @@ namespace kubepp::apps {
                         "namespace": "default"
                     },
                     "spec": {
-                        "failurePolicy": "value1",
-                        "valuesContent": "value2"
+                        "knownField": "value1",
+                        "anotherKnownField": "value2"
                     }
                 })"_json;
 

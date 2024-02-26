@@ -25,6 +25,23 @@ namespace kubepp::apps {
 
                 KubernetesClient kube_client;
 
+
+/*
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                checksum:
+                  type: string
+                  nullable: true
+                source:
+                  type: string
+                  nullable: true
+*/
+
+
                 json crd = R"({
                     "apiVersion": "apiextensions.k8s.io/v1",
                     "kind": "CustomResourceDefinition",
@@ -33,42 +50,39 @@ namespace kubepp::apps {
                     },
                     "spec": {
                         "group": "example.com",
-                        "versions": [
-                            {
-                                "name": "v1",
-                                "served": true,
-                                "storage": true,
-                                "schema": {
-                                    "openAPIV3Schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "spec": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "failurePolicy": {
-                                                        "type": "string",
-                                                        "nullable": true
-                                                    },
-                                                    "valuesContent": {
-                                                        "type": "string",
-                                                        "nullable": true
-                                                    }
+                        "names": {
+                            "kind": "ExampleResource",
+                            "listKind": "ExampleResourceList",
+                            "plural": "exampleresources",
+                            "singular": "exampleresource",
+                            "shortNames": ["exr"]
+                        },
+                        "scope": "Namespaced",
+                        "versions": [{
+                            "name": "v1",
+                            "served": true,
+                            "storage": true,
+                            "schema": {
+                                "openAPIV3Schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "spec": {
+                                            "type": "object",
+                                            "properties": {
+                                                "knownField": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "anotherKnownField": {
+                                                    "type": "string",
+                                                    "nullable": true
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-                        ],
-                        "scope": "Namespaced",
-                        "names": {
-                            "plural": "exampleresources",
-                            "singular": "exampleresource",
-                            "kind": "ExampleResource",
-                            "shortNames": [
-                                "exr"
-                            ]
-                        }
+                        }]
                     }
                 })"_json;
 
