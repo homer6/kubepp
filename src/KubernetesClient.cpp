@@ -39,12 +39,7 @@ namespace kubepp{
         }
 
         fmt::print("The detected base path: {}\n", detected_base_path);
-        // fmt::print("Length of detected base path: {}\n", strlen(detected_base_path));
-        // cout << endl;
-        // fmt::print("The base path: {}\n", base_path);        
-        // fmt::print("Length of base path: {}\n", strlen(base_path.c_str()));
 
-        //apiClient = std::shared_ptr<apiClient_t>( apiClient_create_with_base_path(const_cast<char*>(base_path.c_str()), sslConfig, apiKeys), apiClient_free);
         this->api_client = std::shared_ptr<apiClient_t>( apiClient_create_with_base_path(detected_base_path, sslConfig, apiKeys), apiClient_free);
         
         //this->api_client = std::shared_ptr<apiClient_t>( apiClient_create(), apiClient_free);
@@ -302,21 +297,25 @@ namespace kubepp{
 
         for( const string& k8s_namespace : namespaces ){
 
-            core_v1_event_list_t *event_list = NULL;
-            event_list = CoreV1API_listNamespacedEvent(const_cast<apiClient_t*>(api_client.get()), 
-                                                const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-                                                NULL,    /* pretty */
-                                                NULL,    /* allowWatchBookmarks */
-                                                NULL,    /* continue */
-                                                NULL,    /* fieldSelector */
-                                                NULL,    /* labelSelector */
-                                                NULL,    /* limit */
-                                                NULL,    /* resourceVersion */
-                                                NULL,    /* resourceVersionMatch */
-                                                NULL,    /* sendInitialEvents */
-                                                NULL,    /* timeoutSeconds */
-                                                NULL     /* watch */
-                );
+            std::shared_ptr<core_v1_event_list_t> event_list( 
+                                                    CoreV1API_listNamespacedEvent(
+                                                        const_cast<apiClient_t*>(api_client.get()), 
+                                                        const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+                                                        NULL,    /* pretty */
+                                                        NULL,    /* allowWatchBookmarks */
+                                                        NULL,    /* continue */
+                                                        NULL,    /* fieldSelector */
+                                                        NULL,    /* labelSelector */
+                                                        NULL,    /* limit */
+                                                        NULL,    /* resourceVersion */
+                                                        NULL,    /* resourceVersionMatch */
+                                                        NULL,    /* sendInitialEvents */
+                                                        NULL,    /* timeoutSeconds */
+                                                        NULL     /* watch */
+                                                    ),
+                                                    core_v1_event_list_free
+                                                );
+
 
             //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
 
@@ -329,31 +328,18 @@ namespace kubepp{
                 list_ForEach(listEntry, event_list->items) {
                     event = (core_v1_event_t *)listEntry->data;
 
-                    // let's add all of the fields from the event
+                    json event_json = cjson( core_v1_event_convertToJSON(event) ).toJson();
 
-                    json event_json = json::object();
-                    event_json["namespace"] = k8s_namespace;                    
-                    event_json["type"] = "event";
-
-                    event_json["reason"] = string(event->reason);
-                    event_json["message"] = string(event->message);
-                    event_json["source"] = json{ {"component", string(event->source->component)}, {"host", string(event->source->host)} };
-                    event_json["first_timestamp"] = string(event->first_timestamp);
-                    event_json["last_timestamp"] = string(event->last_timestamp);
-                    event_json["count"] = event->count;
-                    event_json["event_type"] = string(event->type);
-                    event_json["reporting_component"] = string(event->reporting_component);
-                    event_json["reporting_instance"] = string(event->reporting_instance);
-
+                    event_json["apiVersion"] = "v1";
+                    event_json["kind"] = "Event";
+                    
                     events.push_back(event_json);
 
                 }
-                core_v1_event_list_free(event_list);
-                event_list = NULL;
 
             }else{
 
-                fmt::print("Cannot get any event.\n");
+                fmt::print("Cannot get any events.\n");
 
             }
 
@@ -373,19 +359,24 @@ namespace kubepp{
             //
             //char* CoreV1API_readNamespacedPodLog(apiClient_t *apiClient, char *name, char *_namespace, char *container, int *follow, int *insecureSkipTLSVerifyBackend, int *limitBytes, char *pretty, int *previous, int *sinceSeconds, int *tailLines, int *timestamps);
 
-            char* log = CoreV1API_readNamespacedPodLog(const_cast<apiClient_t*>(api_client.get()), 
-                                                const_cast<char*>(pod_name.c_str()),   /*name */
-                                                const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-                                                const_cast<char*>(container.c_str()),    /* container */
-                                                NULL,    /* follow */
-                                                NULL,    /* insecureSkipTLSVerifyBackend */
-                                                NULL,    /* limitBytes */
-                                                NULL,    /* pretty */
-                                                NULL,    /* previous */
-                                                NULL,    /* sinceSeconds */
-                                                NULL,    /* tailLines */
-                                                NULL     /* timestamps */
-            );
+            std::shared_ptr<char> log( 
+                                        CoreV1API_readNamespacedPodLog(
+                                            const_cast<apiClient_t*>(api_client.get()), 
+                                            const_cast<char*>(pod_name.c_str()),   /*name */
+                                            const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+                                            const_cast<char*>(container.c_str()),    /* container */
+                                            NULL,    /* follow */
+                                            NULL,    /* insecureSkipTLSVerifyBackend */
+                                            NULL,    /* limitBytes */
+                                            NULL,    /* pretty */
+                                            NULL,    /* previous */
+                                            NULL,    /* sinceSeconds */
+                                            NULL,    /* tailLines */
+                                            NULL     /* timestamps */
+                                        )
+                                    );
+
+
 
             if( log ){
 
@@ -393,9 +384,7 @@ namespace kubepp{
                 logs["type"] = "log";
                 logs["name"] = pod_name;
                 logs["container"] = container;
-                logs["log"] = string(log);
-                
-                free(log);
+                logs["log"] = string((char*)log.get());
 
             }
 
@@ -409,20 +398,23 @@ namespace kubepp{
 
         json nodes = json::array();
 
-        v1_node_list_t *node_list = NULL;
-        node_list = CoreV1API_listNode(const_cast<apiClient_t*>(api_client.get()), 
-                                            NULL,    /* pretty */
-                                            NULL,    /* allowWatchBookmarks */
-                                            NULL,    /* continue */
-                                            NULL,    /* fieldSelector */
-                                            NULL,    /* labelSelector */
-                                            NULL,    /* limit */
-                                            NULL,    /* resourceVersion */
-                                            NULL,    /* resourceVersionMatch */
-                                            NULL,    /* sendInitialEvents */
-                                            NULL,    /* timeoutSeconds */
-                                            NULL     /* watch */
-        );
+        std::shared_ptr<v1_node_list_t> node_list( 
+                                    CoreV1API_listNode(
+                                        const_cast<apiClient_t*>(api_client.get()), 
+                                        NULL,    /* pretty */
+                                        NULL,    /* allowWatchBookmarks */
+                                        NULL,    /* continue */
+                                        NULL,    /* fieldSelector */
+                                        NULL,    /* labelSelector */
+                                        NULL,    /* limit */
+                                        NULL,    /* resourceVersion */
+                                        NULL,    /* resourceVersionMatch */
+                                        NULL,    /* sendInitialEvents */
+                                        NULL,    /* timeoutSeconds */
+                                        NULL     /* watch */
+                                    ),
+                                    v1_node_list_free
+                                );
 
         if( node_list ){
 
@@ -431,66 +423,14 @@ namespace kubepp{
             list_ForEach(listEntry, node_list->items) {
                 node = (v1_node_t *)listEntry->data;
 
-                json node_json = json::object();
-                node_json["type"] = "node";
-                node_json["name"] = string(node->metadata->name);
-                node_json["creation_timestamp"] = string(node->metadata->creation_timestamp);
+                json node_json = cjson( v1_node_convertToJSON(node) ).toJson();
 
-
-                node_json["spec"] = json::object();
-                node_json["spec"]["pod_cidr"] = string(node->spec->pod_cidr);
-                node_json["spec"]["provider_id"] = string(node->spec->provider_id);
-                node_json["spec"]["unschedulable"] = node->spec->unschedulable;
-
-
-                // list the taints
-                node_json["taints"] = json::array();
-                listEntry_t *taint_list_entry = NULL;
-                v1_taint_t *taint = NULL;
-                list_ForEach(taint_list_entry, node->spec->taints) {
-                    taint = (v1_taint_t *)taint_list_entry->data;
-                    node_json["taints"].push_back( json{ {"key", string(taint->key)}, {"value", string(taint->value)}, {"effect", string(taint->effect)} } );
-                }
-
-
-                // list the conditions
-                node_json["conditions"] = json::array();
-                listEntry_t *condition_list_entry = NULL;
-                v1_node_condition_t *condition = NULL;
-                list_ForEach(condition_list_entry, node->status->conditions) {
-                    condition = (v1_node_condition_t *)condition_list_entry->data;
-                    node_json["conditions"].push_back( json{ {"type", string(condition->type)}, {"status", string(condition->status)} } );
-                }
-
-
-                // list the node info
-                node_json["node_info"] = json::object();
-                node_json["node_info"]["architecture"] = string(node->status->node_info->architecture);
-                node_json["node_info"]["boot_id"] = string(node->status->node_info->boot_id);
-                node_json["node_info"]["container_runtime_version"] = string(node->status->node_info->container_runtime_version);
-                node_json["node_info"]["kernel_version"] = string(node->status->node_info->kernel_version);
-                node_json["node_info"]["kube_proxy_version"] = string(node->status->node_info->kube_proxy_version);
-                node_json["node_info"]["kubelet_version"] = string(node->status->node_info->kubelet_version);
-                node_json["node_info"]["machine_id"] = string(node->status->node_info->machine_id);
-                node_json["node_info"]["operating_system"] = string(node->status->node_info->operating_system);
-                node_json["node_info"]["os_image"] = string(node->status->node_info->os_image);
-                node_json["node_info"]["system_uuid"] = string(node->status->node_info->system_uuid);
-
-
-                // list the addresses
-                node_json["addresses"] = json::array();
-                listEntry_t *address_list_entry = NULL;
-                v1_node_address_t *address = NULL;
-                list_ForEach(address_list_entry, node->status->addresses) {
-                    address = (v1_node_address_t *)address_list_entry->data;
-                    node_json["addresses"].push_back( json{ {"type", string(address->type)}, {"address", string(address->address)} } );
-                }
+                node_json["apiVersion"] = "v1";
+                node_json["kind"] = "Node";
 
                 nodes.push_back(node_json);
-                
+
             }
-            v1_node_list_free(node_list);
-            node_list = NULL;
 
         }else{
 
@@ -514,22 +454,31 @@ namespace kubepp{
         }
 
         // Now, use the cJSON object to parse into the v1_custom_resource_definition_t structure
-        v1_custom_resource_definition_t* crd = v1_custom_resource_definition_parseFromJSON(crd_cjson.get());
-        v1_custom_resource_definition_t* created_custom_resource_definition = ApiextensionsV1API_createCustomResourceDefinition(const_cast<apiClient_t*>(api_client.get()), crd, NULL, NULL, NULL, NULL);
+
+        std::shared_ptr<v1_custom_resource_definition_t> crd( 
+                                                            v1_custom_resource_definition_parseFromJSON(crd_cjson.get()), 
+                                                            v1_custom_resource_definition_free 
+                                                        );
+
+        std::shared_ptr<v1_custom_resource_definition_t> created_custom_resource_definition( 
+                                                            ApiextensionsV1API_createCustomResourceDefinition(
+                                                                const_cast<apiClient_t*>(api_client.get()), 
+                                                                crd.get(), 
+                                                                NULL, 
+                                                                NULL, 
+                                                                NULL, 
+                                                                NULL
+                                                            ),
+                                                            v1_custom_resource_definition_free
+                                                        );
 
         if( created_custom_resource_definition ){
-            cjson cjson_response(v1_custom_resource_definition_convertToJSON(created_custom_resource_definition));
+            cjson cjson_response(v1_custom_resource_definition_convertToJSON(created_custom_resource_definition.get()));
             if( !cjson_response ){
                 return response;
             }
             response = cjson_response.toJson();
-
-            // Free the created custom resource definition object
-            v1_custom_resource_definition_free(created_custom_resource_definition);
         }
-
-        // Free the original CRD object
-        v1_custom_resource_definition_free(crd);
 
         return response;
         
@@ -678,6 +627,13 @@ namespace kubepp{
         return response;
 
     }
+
+
+
+
+
+
+
 
 
 
