@@ -56,12 +56,15 @@ namespace kubepp{
 
             
             /* Prefer using the createResources method instead, which will detect the type of resources automatically. */
+            json getCustomResourceDefinition( const string& name ) const;
             json createCustomResourceDefinition( const json& custom_resource_definition ) const;
             json deleteCustomResourceDefinition( const json& custom_resource_definition ) const;
+            json getCustomResourceDefinitions() const;
 
             //this works for both namespaced-scoped and cluster-scoped custom resources
             //resource without a namespace are treated as cluster-scoped
             json createCustomResource( const json& custom_resource ) const;
+            json deleteCustomResource( const json& custom_resource ) const;
 
             json createPod( const json& pod ) const;
             json deletePod( const json& pod ) const;

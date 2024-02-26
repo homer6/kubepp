@@ -12,7 +12,9 @@ using std::string;
 #include "apps/WorkloadsApp.h"
 #include "apps/NodesApp.h"
 #include "apps/CustomResourceDefinitionsApp.h"
+#include "apps/CustomResourceApp.h"
 #include "apps/PodApp.h"
+
 
 
 namespace kubepp {
@@ -34,6 +36,7 @@ namespace kubepp {
             apps::WorkloadsApp workloads_app;
             apps::NodesApp nodes_app;
             apps::CustomResourceDefinitionsApp crds_app;
+            apps::CustomResourceApp crs_app;
             apps::PodApp pod_app;
             
     };

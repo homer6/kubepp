@@ -33,14 +33,18 @@ int main(int argc, char **argv) {
     // Nodes command
         CLI::App *nodes_app = app.add_subcommand("nodes", "Manage nodes.");
 
-
     // CRDs command
         CLI::App *crds_app = app.add_subcommand("crds", "Manage custom resource definitions.");
         CLI::App *crds_create_app = crds_app->add_subcommand("create", "Creates a sample CRD.");
         CLI::App *crds_delete_app = crds_app->add_subcommand("delete", "Deletes the a sample CRD.");
+        CLI::App *crds_list_app = crds_app->add_subcommand("list", "Lists the CRDs.");
 
-    // Pod command
+    // CRs command
+        CLI::App *crs_app = app.add_subcommand("crs", "Manage custom resources.");
+        CLI::App *crs_create_app = crs_app->add_subcommand("create", "Creates a sample CR.");
+        CLI::App *crs_delete_app = crs_app->add_subcommand("delete", "Deletes the a sample CR.");
 
+    // Pods command
         CLI::App *pod_app = app.add_subcommand("pods", "Manage pods.");
         CLI::App *pod_create_app = pod_app->add_subcommand("create", "Creates a sample pod.");
         CLI::App *pod_delete_app = pod_app->add_subcommand("delete", "Deletes the a sample pod.");
@@ -90,6 +94,22 @@ int main(int argc, char **argv) {
             }else if( *crds_delete_app ){
 
                 kubepp_app.crds_app.deleteSample();
+
+            }else if( *crds_list_app ){
+
+                kubepp_app.crds_app.displayCustomResourceDefinitions();
+
+            }
+
+        // CRs command
+
+            else if( *crs_create_app ){
+
+                kubepp_app.crs_app.createSample();
+
+            }else if( *crs_delete_app ){
+
+                kubepp_app.crs_app.deleteSample();
 
             }
 

@@ -6,6 +6,7 @@ extern "C" {
     #include <CoreV1API.h>
     #include <AppsV1API.h>
     #include <ApiextensionsV1API.h>
+    #include <CustomObjectsAPI.h>
 }
 
 #include <stdexcept>
@@ -432,6 +433,42 @@ namespace kubepp{
     }
 
 
+
+    json KubernetesClient::getCustomResourceDefinition( const string& name ) const{
+
+        json crd_json = json::object();
+
+        /*
+            // read the specified CustomResourceDefinition
+            //
+            v1_custom_resource_definition_t*
+            ApiextensionsV1API_readCustomResourceDefinition(apiClient_t *apiClient, char *name, char *pretty);
+        */
+
+        std::shared_ptr<v1_custom_resource_definition_t> crd( 
+                                    ApiextensionsV1API_readCustomResourceDefinition(
+                                        const_cast<apiClient_t*>(api_client.get()), 
+                                        const_cast<char*>(name.c_str()),
+                                        NULL    /* pretty */
+                                    ),
+                                    v1_custom_resource_definition_free
+                                );
+
+        if( crd ){
+
+            crd_json = cjson( v1_custom_resource_definition_convertToJSON(crd.get()) ).toJson();
+
+        }else{
+
+            fmt::print("Cannot get this custom resource definition.\n");
+
+        }
+
+        return crd_json;
+
+    }
+
+
     json KubernetesClient::createCustomResourceDefinition( const json& custom_resource_definition ) const{
 
         json response = json::object();
@@ -511,6 +548,479 @@ namespace kubepp{
 
     }
 
+
+    json KubernetesClient::getCustomResourceDefinitions() const{
+
+        json crds = json::array();
+
+        std::shared_ptr<v1_custom_resource_definition_list_t> crd_list( 
+                                    ApiextensionsV1API_listCustomResourceDefinition(
+                                        const_cast<apiClient_t*>(api_client.get()), 
+                                        NULL,    /* pretty */
+                                        NULL,    /* allowWatchBookmarks */
+                                        NULL,    /* continue */
+                                        NULL,    /* fieldSelector */
+                                        NULL,    /* labelSelector */
+                                        NULL,    /* limit */
+                                        NULL,    /* resourceVersion */
+                                        NULL,    /* resourceVersionMatch */
+                                        NULL,    /* sendInitialEvents */
+                                        NULL,    /* timeoutSeconds */
+                                        NULL     /* watch */
+                                    ),
+                                    v1_custom_resource_definition_list_free
+                                );
+
+        if( crd_list ){
+
+            listEntry_t *listEntry = NULL;
+            v1_custom_resource_definition_t *crd = NULL;
+            list_ForEach(listEntry, crd_list->items) {
+                crd = (v1_custom_resource_definition_t *)listEntry->data;
+
+                json crd_json = cjson( v1_custom_resource_definition_convertToJSON(crd) ).toJson();
+
+                crd_json["apiVersion"] = "apiextensions.k8s.io/v1";
+                crd_json["kind"] = "CustomResourceDefinition";
+
+                crds.push_back(crd_json);
+
+            }
+
+        }else{
+
+            fmt::print("Cannot get any custom resource definitions.\n");
+
+        }
+
+        return crds;
+
+    }
+
+
+
+
+    json KubernetesClient::createCustomResource( const json& custom_resource ) const{
+
+        json response = json::object();
+
+        cjson custom_resource_cjson(custom_resource);
+        if( !custom_resource_cjson ){
+            fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
+            throw std::runtime_error("Cannot parse the custom resource JSON.");
+        }
+
+        //check to see if the namespace is specified (optional for cluster-scoped resources)
+        string k8s_namespace;
+        if( custom_resource.contains("metadata") && custom_resource["metadata"].contains("namespace") && custom_resource["metadata"]["namespace"].is_string() && !custom_resource["metadata"]["namespace"].get<string>().empty() ){
+            k8s_namespace = custom_resource["metadata"]["namespace"].get<string>();
+        }
+
+        //check to see if the kind is specified
+        if( !custom_resource.contains("kind") || !custom_resource["kind"].is_string() || custom_resource["kind"].get<string>().empty() ){
+            throw std::runtime_error("The custom resource must have a 'kind' field that is a non-empty string.");
+        }
+        const string kind = custom_resource["kind"].get<string>();
+
+        //check to see if the apiVersion is specified
+        if( !custom_resource.contains("apiVersion") || !custom_resource["apiVersion"].is_string() || custom_resource["apiVersion"].get<string>().empty() ){
+            throw std::runtime_error("The custom resource must have a 'apiVersion' field that is a non-empty string.");
+        }
+        const string api_version = custom_resource["apiVersion"].get<string>();
+
+
+        json all_crds = this->getCustomResourceDefinitions();
+
+        // get the plural, group, and version from the custom resource definition (match with kind and api_version)
+        // don't just use the first version, make sure they match
+        string plural;
+        string group;
+        string version;
+
+
+
+        /*
+
+        CR:
+
+                json cr = R"({
+                    "apiVersion": "example.com/v1",
+                    "kind": "ExampleResource",
+                    "metadata": {
+                        "name": "my-example-resource",
+                        "namespace": "default"
+                    },
+                    "spec": {
+                        "field1": "value1",
+                        "field2": true
+                    }
+                })"_json;
+
+
+
+        CRD: 
+        "spec": {
+            "conversion": {
+                "strategy": "None"
+            },
+            "group": "example.com",
+            "names": {
+                "kind": "ExampleResource",
+                "listKind": "ExampleResourceList",
+                "plural": "exampleresources",
+                "shortNames": [
+                    "exr"
+                ],
+                "singular": "exampleresource"
+            },
+            "scope": "Namespaced",
+            "versions": [
+                {
+                    "name": "v1",
+                    "schema": {
+                        "openAPIV3Schema": {
+                            "type": "object"
+                        }
+                    },
+                    "served": true,
+                    "storage": true
+                }
+            ]
+        },
+
+        
+        */
+
+        for( const auto& crd : all_crds ){
+
+            if( crd.contains("spec") && crd["spec"].contains("group") && crd["spec"]["group"].is_string() && crd["spec"]["group"].get<string>() == api_version.substr(0, api_version.find("/")) ){
+
+                group = crd["spec"]["group"].get<string>();
+
+                if( crd["spec"].contains("names") && crd["spec"]["names"].contains("kind") && crd["spec"]["names"]["kind"].is_string() && crd["spec"]["names"]["kind"].get<string>() == kind ){
+
+                    if( crd["spec"]["names"].contains("plural") && crd["spec"]["names"]["plural"].is_string() && !crd["spec"]["names"]["plural"].get<string>().empty() ){
+                        plural = crd["spec"]["names"]["plural"].get<string>();
+                    }
+
+                    if( crd["spec"].contains("versions") && crd["spec"]["versions"].is_array() ){
+
+                        for( const auto& version_obj : crd["spec"]["versions"] ){
+
+                            if( version_obj.contains("name") && version_obj["name"].is_string() && version_obj["name"].get<string>() == api_version.substr(api_version.find("/")+1) ){
+
+                                version = version_obj["name"].get<string>();
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        cout << "The plural: " << plural << endl;
+        cout << "The group: " << group << endl;
+        cout << "The version: " << version << endl;
+        cout << "The namespace: " << k8s_namespace << endl;
+        cout << "The kind: " << kind << endl;
+        cout << "The apiVersion: " << api_version << endl;
+
+
+        /*
+
+        // Creates a cluster scoped Custom object
+        //
+        object_t*
+        CustomObjectsAPI_createClusterCustomObject(apiClient_t *apiClient, char *group, char *version, char *plural, object_t *body, char *pretty, char *dryRun, char *fieldManager, char *fieldValidation);
+
+
+        // Creates a namespace scoped Custom object
+        //
+        object_t*
+        CustomObjectsAPI_createNamespacedCustomObject(apiClient_t *apiClient, char *group, char *version, char *_namespace, char *plural, object_t *body, char *pretty, char *dryRun, char *fieldManager, char *fieldValidation);
+        
+        */
+
+        if( k8s_namespace.empty() ){
+
+            //cluster-scoped custom resource
+
+            std::shared_ptr<object_t> custom_resource_type( object_parseFromJSON(custom_resource_cjson.get()), object_free );
+            std::shared_ptr<object_t> created_custom_resource(
+                                                CustomObjectsAPI_createClusterCustomObject(
+                                                    const_cast<apiClient_t*>(api_client.get()), /* apiClient */
+                                                    const_cast<char*>(group.c_str()),           /* group */
+                                                    const_cast<char*>(version.c_str()),         /* version */
+                                                    const_cast<char*>(plural.c_str()),          /* plural */
+                                                    custom_resource_type.get(),                 /* body */
+                                                    NULL, /* pretty */
+                                                    NULL, /* dryRun */
+                                                    NULL, /* fieldManager */
+                                                    NULL  /* create options */
+                                                ),
+                                                object_free
+                                            );
+            
+            if( created_custom_resource ){
+                    
+                cjson cjson_response(object_convertToJSON(created_custom_resource.get()));
+                if( !cjson_response ){
+                    return response;
+                }
+                response = cjson_response.toJson();
+
+            } else {
+                fmt::print("Cannot create a cluster-scoped custom resource.\n");
+            }
+
+        }else{
+
+            //namespace-scoped custom resource
+            
+            std::shared_ptr<object_t> custom_resource_type( object_parseFromJSON(custom_resource_cjson.get()), object_free );
+            std::shared_ptr<object_t> created_custom_resource(
+                                                CustomObjectsAPI_createNamespacedCustomObject(
+                                                    const_cast<apiClient_t*>(api_client.get()), /* apiClient */
+                                                    const_cast<char*>(group.c_str()),           /* group */
+                                                    const_cast<char*>(version.c_str()),         /* version */
+                                                    const_cast<char*>(k8s_namespace.c_str()),   /* namespace */
+                                                    const_cast<char*>(plural.c_str()),          /* plural */
+                                                    custom_resource_type.get(),                 /* body */
+                                                    NULL, /* pretty */
+                                                    NULL, /* dryRun */
+                                                    NULL, /* fieldManager */
+                                                    NULL  /* create options */
+                                                ),
+                                                object_free
+                                            );
+            
+            if( created_custom_resource ){
+                    
+                cjson cjson_response(object_convertToJSON(created_custom_resource.get()));
+                if( !cjson_response ){
+                    return response;
+                }
+                response = cjson_response.toJson();
+
+            } else {
+                fmt::print("Cannot create a cluster-scoped custom resource.\n");
+            }
+
+        }
+
+        return response;
+
+    }
+
+
+
+    json KubernetesClient::deleteCustomResource( const json& custom_resource ) const{
+
+        json response = json::object();
+
+        //check to see if the name is specified
+        if( !custom_resource.contains("metadata") || !custom_resource["metadata"].contains("name") || !custom_resource["metadata"]["name"].is_string() || custom_resource["metadata"]["name"].get<string>().empty() ){
+            throw std::runtime_error("The custom resource must have a 'metadata.name' field that is a non-empty string.");
+        }
+        const string name = custom_resource["metadata"]["name"].get<string>();
+
+
+        //check to see if the namespace is specified (optional for cluster-scoped resources)
+        string k8s_namespace;
+        if( custom_resource.contains("metadata") && custom_resource["metadata"].contains("namespace") && custom_resource["metadata"]["namespace"].is_string() && !custom_resource["metadata"]["namespace"].get<string>().empty() ){
+            k8s_namespace = custom_resource["metadata"]["namespace"].get<string>();
+        }
+
+        //check to see if the kind is specified
+        if( !custom_resource.contains("kind") || !custom_resource["kind"].is_string() || custom_resource["kind"].get<string>().empty() ){
+            throw std::runtime_error("The custom resource must have a 'kind' field that is a non-empty string.");
+        }
+        const string kind = custom_resource["kind"].get<string>();
+
+        //check to see if the apiVersion is specified
+        if( !custom_resource.contains("apiVersion") || !custom_resource["apiVersion"].is_string() || custom_resource["apiVersion"].get<string>().empty() ){
+            throw std::runtime_error("The custom resource must have a 'apiVersion' field that is a non-empty string.");
+        }
+        const string api_version = custom_resource["apiVersion"].get<string>();
+
+
+
+
+        json all_crds = this->getCustomResourceDefinitions();
+
+        // get the plural, group, and version from the custom resource definition (match with kind and api_version)
+        // don't just use the first version, make sure they match
+        string plural;
+        string group;
+        string version;
+
+
+
+        /*
+
+        CR:
+
+                json cr = R"({
+                    "apiVersion": "example.com/v1",
+                    "kind": "ExampleResource",
+                    "metadata": {
+                        "name": "my-example-resource",
+                        "namespace": "default"
+                    },
+                    "spec": {
+                        "field1": "value1",
+                        "field2": true
+                    }
+                })"_json;
+
+
+
+        CRD: 
+        "spec": {
+            "conversion": {
+                "strategy": "None"
+            },
+            "group": "example.com",
+            "names": {
+                "kind": "ExampleResource",
+                "listKind": "ExampleResourceList",
+                "plural": "exampleresources",
+                "shortNames": [
+                    "exr"
+                ],
+                "singular": "exampleresource"
+            },
+            "scope": "Namespaced",
+            "versions": [
+                {
+                    "name": "v1",
+                    "schema": {
+                        "openAPIV3Schema": {
+                            "type": "object"
+                        }
+                    },
+                    "served": true,
+                    "storage": true
+                }
+            ]
+        },
+
+        
+        */
+
+        for( const auto& crd : all_crds ){
+
+            if( crd.contains("spec") && crd["spec"].contains("group") && crd["spec"]["group"].is_string() && crd["spec"]["group"].get<string>() == api_version.substr(0, api_version.find("/")) ){
+
+                group = crd["spec"]["group"].get<string>();
+
+                if( crd["spec"].contains("names") && crd["spec"]["names"].contains("kind") && crd["spec"]["names"]["kind"].is_string() && crd["spec"]["names"]["kind"].get<string>() == kind ){
+
+                    if( crd["spec"]["names"].contains("plural") && crd["spec"]["names"]["plural"].is_string() && !crd["spec"]["names"]["plural"].get<string>().empty() ){
+                        plural = crd["spec"]["names"]["plural"].get<string>();
+                    }
+
+                    if( crd["spec"].contains("versions") && crd["spec"]["versions"].is_array() ){
+
+                        for( const auto& version_obj : crd["spec"]["versions"] ){
+
+                            if( version_obj.contains("name") && version_obj["name"].is_string() && version_obj["name"].get<string>() == api_version.substr(api_version.find("/")+1) ){
+
+                                version = version_obj["name"].get<string>();
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        cout << "The plural: " << plural << endl;
+        cout << "The group: " << group << endl;
+        cout << "The version: " << version << endl;
+        cout << "The namespace: " << k8s_namespace << endl;
+        cout << "The kind: " << kind << endl;
+        cout << "The apiVersion: " << api_version << endl;
+        cout << "The name: " << name << endl;
+
+
+
+
+
+
+        if( k8s_namespace.empty() ){
+
+            //cluster-scoped custom resource
+
+            std::shared_ptr<object_t> deleted_custom_resource( 
+                                                CustomObjectsAPI_deleteClusterCustomObject(
+                                                    const_cast<apiClient_t*>(api_client.get()), /* apiClient */
+                                                    const_cast<char*>(group.c_str()),           /* group */
+                                                    const_cast<char*>(version.c_str()),     /* version */
+                                                    const_cast<char*>(plural.c_str()),          /* plural */
+                                                    const_cast<char*>(name.c_str()),            /* name */
+                                                    NULL, /* gracePeriodSeconds */
+                                                    NULL, /* orphanDependents */
+                                                    NULL, /* propagationPolicy */
+                                                    NULL, /* dryRun */
+                                                    NULL  /* delete options */
+                                                ),
+                                                object_free
+                                            );
+
+            if( deleted_custom_resource ){
+                cjson cjson_response( object_convertToJSON(deleted_custom_resource.get()) );
+                if( !cjson_response ){
+                    return response;
+                }
+                response = cjson_response.toJson();
+            }
+
+        }else{
+
+            //namespace-scoped custom resource
+
+            std::shared_ptr<object_t> deleted_custom_resource( 
+                                                CustomObjectsAPI_deleteNamespacedCustomObject(
+                                                    const_cast<apiClient_t*>(api_client.get()), /* apiClient */
+                                                    const_cast<char*>(group.c_str()),           /* group */
+                                                    const_cast<char*>(version.c_str()),     /* version */
+                                                    const_cast<char*>(k8s_namespace.c_str()),   /* namespace */
+                                                    const_cast<char*>(plural.c_str()),          /* plural */
+                                                    const_cast<char*>(name.c_str()),            /* name */
+                                                    NULL, /* gracePeriodSeconds */
+                                                    NULL, /* orphanDependents */
+                                                    NULL, /* propagationPolicy */
+                                                    NULL, /* dryRun */
+                                                    NULL  /* delete options */
+                                                ),
+                                                object_free
+                                            );
+
+            if( deleted_custom_resource ){
+                cjson cjson_response( object_convertToJSON(deleted_custom_resource.get()) );
+                if( !cjson_response ){
+                    return response;
+                }
+                response = cjson_response.toJson();
+            }
+
+        }
+
+
+        return response;
+
+    }
 
 
 
@@ -684,10 +1194,11 @@ namespace kubepp{
         if( kind == "CustomResourceDefinition" ){
             response = this->createCustomResourceDefinition(resource);
         }else if( kind == "Pod" ){
-            response = this->createPod(resource);        
+            response = this->createPod(resource);
         }else{
-            fmt::print("The kind of resource, '{}', is not supported.\n", kind);
-            throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
+            response = this->createCustomResource(resource);
+            //fmt::print("The kind of resource, '{}', is not supported.\n", kind);
+            //throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
         }
 
         return response;
@@ -743,8 +1254,9 @@ namespace kubepp{
         }else if( kind == "Pod" ){
             response = this->deletePod(resource);
         }else{
-            fmt::print("The kind of resource, '{}', is not supported.\n", kind);
-            throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
+            response = this->deleteCustomResource(resource);
+            //fmt::print("The kind of resource, '{}', is not supported.\n", kind);
+            //throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
         }
 
         return response;

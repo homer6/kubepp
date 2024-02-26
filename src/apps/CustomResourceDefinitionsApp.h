@@ -24,7 +24,7 @@ namespace kubepp::apps {
             void createSample(){
 
                 KubernetesClient kube_client;
-                
+
                 json crd = R"({
                     "apiVersion": "apiextensions.k8s.io/v1",
                     "kind": "CustomResourceDefinition",
@@ -45,14 +45,15 @@ namespace kubepp::apps {
                                             "spec": {
                                                 "type": "object",
                                                 "properties": {
-                                                    "field1": {
-                                                        "type": "string"
+                                                    "failurePolicy": {
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
-                                                    "field2": {
-                                                        "type": "boolean"
+                                                    "valuesContent": {
+                                                        "type": "string",
+                                                        "nullable": true
                                                     }
-                                                },
-                                                "required": ["field1"]
+                                                }
                                             }
                                         }
                                     }
@@ -64,7 +65,9 @@ namespace kubepp::apps {
                             "plural": "exampleresources",
                             "singular": "exampleresource",
                             "kind": "ExampleResource",
-                            "shortNames": ["exr"]
+                            "shortNames": [
+                                "exr"
+                            ]
                         }
                     }
                 })"_json;
@@ -93,6 +96,15 @@ namespace kubepp::apps {
 
                 cout << response.dump(4) << endl;
                                 
+            }
+
+
+            void displayCustomResourceDefinitions(){
+
+                KubernetesClient kube_client;
+                json crds = kube_client.getCustomResourceDefinitions();
+                cout << crds.dump(4) << endl;
+
             }
 
 
