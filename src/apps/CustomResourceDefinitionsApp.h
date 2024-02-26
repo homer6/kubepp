@@ -25,64 +25,43 @@ namespace kubepp::apps {
 
                 KubernetesClient kube_client;
 
-
-/*
-        openAPIV3Schema:
-          type: object
-          properties:
-            spec:
-              type: object
-              properties:
-                checksum:
-                  type: string
-                  nullable: true
-                source:
-                  type: string
-                  nullable: true
-*/
-
-
                 json crd = R"({
                     "apiVersion": "apiextensions.k8s.io/v1",
                     "kind": "CustomResourceDefinition",
                     "metadata": {
-                        "name": "exampleresources.example.com"
+                        "name": "crontabs.stable.example.com"
                     },
                     "spec": {
-                        "group": "example.com",
-                        "names": {
-                            "kind": "ExampleResource",
-                            "listKind": "ExampleResourceList",
-                            "plural": "exampleresources",
-                            "singular": "exampleresource",
-                            "shortNames": ["exr"]
-                        },
-                        "scope": "Namespaced",
-                        "versions": [{
-                            "name": "v1",
-                            "served": true,
-                            "storage": true,
-                            "schema": {
-                                "openAPIV3Schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "spec": {
-                                            "type": "object",
-                                            "properties": {
-                                                "knownField": {
-                                                    "type": "string",
-                                                    "nullable": true
-                                                },
-                                                "anotherKnownField": {
-                                                    "type": "string",
-                                                    "nullable": true
+                        "group": "stable.example.com",
+                        "versions": [
+                            {
+                                "name": "v1",
+                                "served": true,
+                                "storage": true,
+                                "schema": {
+                                    "openAPIV3Schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "spec": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "cronSpec": {"type": "string"},
+                                                    "image": {"type": "string"},
+                                                    "replicas": {"type": "integer"}
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }]
+                        ],
+                        "scope": "Namespaced",
+                        "names": {
+                            "plural": "crontabs",
+                            "singular": "crontab",
+                            "kind": "CronTab",
+                            "shortNames": ["ct"]
+                        }
                     }
                 })"_json;
 
@@ -102,7 +81,7 @@ namespace kubepp::apps {
                     "apiVersion": "apiextensions.k8s.io/v1",
                     "kind": "CustomResourceDefinition",
                     "metadata": {
-                        "name": "exampleresources.example.com"
+                        "name": "crontabs.stable.example.com"
                     }
                 })"_json;
 

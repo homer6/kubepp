@@ -479,6 +479,8 @@ namespace kubepp{
             throw std::runtime_error("Cannot parse the custom resource definition JSON.");
         }
 
+        cout << crd_cjson << endl;
+
         // Now, use the cJSON object to parse into the v1_custom_resource_definition_t structure
 
         std::shared_ptr<v1_custom_resource_definition_t> crd( 

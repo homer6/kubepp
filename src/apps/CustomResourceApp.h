@@ -27,15 +27,16 @@ namespace kubepp::apps {
                 KubernetesClient kube_client;
 
                 json cr = R"({
-                    "apiVersion": "example.com/v1",
-                    "kind": "ExampleResource",
+                    "apiVersion": "stable.example.com/v1",
+                    "kind": "CronTab",
                     "metadata": {
-                        "name": "my-example-resource",
+                        "name": "my-crontab",
                         "namespace": "default"
                     },
                     "spec": {
-                        "knownField": "value1",
-                        "anotherKnownField": "value2"
+                        "cronSpec": "*/5 * * * *",
+                        "image": "my-cron-image:latest",
+                        "replicas": 3
                     }
                 })"_json;
 
@@ -52,10 +53,10 @@ namespace kubepp::apps {
                 KubernetesClient kube_client;
                 
                 json cr = R"({
-                    "apiVersion": "example.com/v1",
-                    "kind": "ExampleResource",
+                    "apiVersion": "stable.example.com/v1",
+                    "kind": "CronTab",
                     "metadata": {
-                        "name": "my-example-resource",
+                        "name": "my-crontab",
                         "namespace": "default"
                     }
                 })"_json;
