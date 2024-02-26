@@ -332,7 +332,7 @@ namespace kubepp{
 
                     event_json["apiVersion"] = "v1";
                     event_json["kind"] = "Event";
-                    
+
                     events.push_back(event_json);
 
                 }
@@ -495,27 +495,27 @@ namespace kubepp{
         }
         const string name = custom_resource_definition["metadata"]["name"].get<string>();
 
-        v1_status_t* status = ApiextensionsV1API_deleteCustomResourceDefinition(
-                                            const_cast<apiClient_t*>(api_client.get()), 
-                                            const_cast<char*>(name.c_str()),
-                                            NULL, /* pretty */
-                                            NULL, /* dryRun */
-                                            NULL, /* gracePeriodSeconds */
-                                            NULL, /* orphanDependents */
-                                            NULL, /* propagationPolicy */
-                                            NULL  /* delete options */
-        );
+        std::shared_ptr<v1_status_t> status( 
+                                            ApiextensionsV1API_deleteCustomResourceDefinition(
+                                                const_cast<apiClient_t*>(api_client.get()), 
+                                                const_cast<char*>(name.c_str()),
+                                                NULL, /* pretty */
+                                                NULL, /* dryRun */
+                                                NULL, /* gracePeriodSeconds */
+                                                NULL, /* orphanDependents */
+                                                NULL, /* propagationPolicy */
+                                                NULL  /* delete options */
+                                            ),
+                                            v1_status_free
+                                        );
 
 
         if( status ){
-            cjson cjson_response(v1_status_convertToJSON(status));
+            cjson cjson_response(v1_status_convertToJSON(status.get()));
             if( !cjson_response ){
                 return response;
             }
             response = cjson_response.toJson();
-
-            // Free the status object
-            v1_status_free(status);
         }
 
         return response;
@@ -542,35 +542,33 @@ namespace kubepp{
         }
         const string k8s_namespace = pod["metadata"]["namespace"].get<string>();
 
-        // Now, use the cJSON object to parse into the v1_pod_t structure
-        v1_pod_t* pod_type = v1_pod_parseFromJSON(pod_cjson.get());
-        v1_pod_t* created_pod = CoreV1API_createNamespacedPod(
-                                            const_cast<apiClient_t*>(api_client.get()),                                            
-                                            const_cast<char*>(k8s_namespace.c_str()),
-                                            pod_type,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            NULL
-        );
+
+        std::shared_ptr<v1_pod_t> pod_type( v1_pod_parseFromJSON(pod_cjson.get()), v1_pod_free );
+        std::shared_ptr<v1_pod_t> created_pod( 
+                                            CoreV1API_createNamespacedPod(
+                                                const_cast<apiClient_t*>(api_client.get()), 
+                                                const_cast<char*>(k8s_namespace.c_str()),
+                                                pod_type.get(),
+                                                NULL, /* pretty */
+                                                NULL, /* dryRun */
+                                                NULL, /* fieldManager */
+                                                NULL  /* create options */
+                                            ),
+                                            v1_pod_free
+                                        );
+
 
         if( created_pod ){
 
-            cjson cjson_response(v1_pod_convertToJSON(created_pod));
+            cjson cjson_response(v1_pod_convertToJSON(created_pod.get()));
             if( !cjson_response ){
                 return response;
             }
             response = cjson_response.toJson();
 
-            // Free the created pod object
-            v1_pod_free(created_pod);
-
         } else {
             fmt::print("Cannot create a pod.\n");
         }
-
-        // Free the original pod object
-        v1_pod_free(pod_type);
 
         return response;
         
@@ -594,31 +592,29 @@ namespace kubepp{
         const string pod_name = pod["metadata"]["name"].get<string>();
 
 
-        v1_pod_t* pod_object = CoreV1API_deleteNamespacedPod(
-                                            const_cast<apiClient_t*>(api_client.get()), 
-                                            const_cast<char*>(pod_name.c_str()),
-                                            const_cast<char*>(k8s_namespace.c_str()),
-                                            NULL, /* pretty */                                            
-                                            NULL, /* dryRun */
-                                            NULL, /* gracePeriodSeconds */
-                                            NULL, /* orphanDependents */
-                                            NULL, /* propagationPolicy */
-                                            NULL /* delete options */  
-        );
-
+        std::shared_ptr<v1_pod_t> pod_object(
+                                            CoreV1API_deleteNamespacedPod(
+                                                const_cast<apiClient_t*>(api_client.get()), 
+                                                const_cast<char*>(pod_name.c_str()),
+                                                const_cast<char*>(k8s_namespace.c_str()),
+                                                NULL, /* pretty */                                            
+                                                NULL, /* dryRun */
+                                                NULL, /* gracePeriodSeconds */
+                                                NULL, /* orphanDependents */
+                                                NULL, /* propagationPolicy */
+                                                NULL /* delete options */
+                                            ), 
+                                            v1_pod_free 
+                                        );
 
         if( pod_object ){
 
-            cjson cjson_response(v1_pod_convertToJSON(pod_object));
+            cjson cjson_response(v1_pod_convertToJSON(pod_object.get()));
             if( !cjson_response ){
                 return response;
             }
 
-            // Convert cJSON to nlohmann JSON
             response = cjson_response.toJson();
-
-            // Free the pod object
-            v1_pod_free(pod_object);  
 
         }else{
             fmt::print("Cannot delete a pod.\n");
