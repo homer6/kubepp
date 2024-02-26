@@ -199,14 +199,11 @@ namespace kubepp{
 
                     pod_json["apiVersion"] = "v1";
                     pod_json["kind"] = "Pod";
-
-                    //pod_json["namespace"] = k8s_namespace;
-                    //pod_json["type"] = "pod";
-                    //pod_json["name"] = if( pod->metadata->name )  string(pod->metadata->name);
-                    //pod_json["api_version"] = string(pod->api_version);
-                    //pod_json["kind"] = string(pod->kind);
                     pod_json["metadata"] = cjson( v1_object_meta_convertToJSON(pod->metadata) ).toJson();
                     pod_json["spec"] = cjson( v1_pod_spec_convertToJSON(pod->spec) ).toJson();
+
+                    //CoreV1API_listNamespacedPod doesn't parse the statuses, even though they are in the response payload: https://github.com/kubernetes-client/c/issues/221
+
                     pod_json["status"] = cjson( v1_pod_status_convertToJSON(pod->status) ).toJson();
 
                     pods.push_back(pod_json);
