@@ -84,13 +84,9 @@ namespace kubepp{
 
         spdlog::info( "Listing logs:" );
 
-        auto pods = this->getPods();
+        auto logs = this->getPodLogs( "kube-system", "svclb-traefik-06f20d2a-684jx", "lb-tcp-80" );
 
-        for( const auto& pod : pods ){
-            for( const auto& container : pod["containers"] ){                
-                cout << this->getPodLogs(pod["namespace"], pod["name"], container).dump(4) << endl;
-            }            
-        }
+        cout << logs.dump(4) << endl;
 
     }
 
@@ -352,44 +348,37 @@ namespace kubepp{
 
     json KubernetesClient::getPodLogs( const string& k8s_namespace, const string& pod_name, const string& container ) const{
 
-
         json logs = json::object();
 
-            // read log of the specified Pod
-            //
-            //char* CoreV1API_readNamespacedPodLog(apiClient_t *apiClient, char *name, char *_namespace, char *container, int *follow, int *insecureSkipTLSVerifyBackend, int *limitBytes, char *pretty, int *previous, int *sinceSeconds, int *tailLines, int *timestamps);
-
-            std::shared_ptr<char> log( 
-                                        CoreV1API_readNamespacedPodLog(
-                                            const_cast<apiClient_t*>(api_client.get()), 
-                                            const_cast<char*>(pod_name.c_str()),   /*name */
-                                            const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-                                            const_cast<char*>(container.c_str()),    /* container */
-                                            NULL,    /* follow */
-                                            NULL,    /* insecureSkipTLSVerifyBackend */
-                                            NULL,    /* limitBytes */
-                                            NULL,    /* pretty */
-                                            NULL,    /* previous */
-                                            NULL,    /* sinceSeconds */
-                                            NULL,    /* tailLines */
-                                            NULL     /* timestamps */
-                                        )
+        char* log_string = CoreV1API_readNamespacedPodLog(
+                                        const_cast<apiClient_t*>(api_client.get()), 
+                                        const_cast<char*>(pod_name.c_str()),   /*name */
+                                        const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+                                        const_cast<char*>(container.c_str()),    /* container */
+                                        NULL,    /* follow */
+                                        NULL,    /* insecureSkipTLSVerifyBackend */
+                                        NULL,    /* limitBytes */
+                                        NULL,    /* pretty */
+                                        NULL,    /* previous */
+                                        NULL,    /* sinceSeconds */
+                                        NULL,    /* tailLines */
+                                        NULL     /* timestamps */
                                     );
 
+        //fmt::print("The return code of HTTP request={}\n", api_client->response_code);
 
+        logs["namespace"] = k8s_namespace;
+        logs["type"] = "log";
+        logs["name"] = pod_name;
+        logs["container"] = container;
+        logs["log"] = "";
 
-            if( log ){
-
-                logs["namespace"] = k8s_namespace;
-                logs["type"] = "log";
-                logs["name"] = pod_name;
-                logs["container"] = container;
-                logs["log"] = string((char*)log.get());
-
-            }
+        if( log_string ){
+            logs["log"] = string(log_string);
+            free(log_string);
+        }
 
         return logs;
-
 
     }
 

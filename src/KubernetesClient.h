@@ -70,7 +70,8 @@ namespace kubepp{
 
 
 
-            //doesn't work yet; needs debugging
+            //doesn't work yet; needs this fix applied in the c client: https://github.com/kubernetes-client/c/issues/222
+            //this method works if the fix is applied to the c client
             json getPodLogs( const string& k8s_namespace, const string& pod_name, const string& container ) const;
 
             vector<string> getNamespaceNames() const;

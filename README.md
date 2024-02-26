@@ -34,3 +34,12 @@ KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E ./build/kubepp logs
 ```
 
 
+## Debug
+
+
+```
+KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E gdb --args ./build/kubepp logs
+(gdb) set environment KUBECONFIG="/etc/rancher/k3s/k3s.yaml"
+(gdb) run
+```
+
