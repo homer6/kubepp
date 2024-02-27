@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
         CLI::App *pod_app = app.add_subcommand("pods", "Manage pods.");
         CLI::App *pod_create_app = pod_app->add_subcommand("create", "Creates a sample pod.");
         CLI::App *pod_delete_app = pod_app->add_subcommand("delete", "Deletes the a sample pod.");
+        CLI::App *pod_list_app = pod_app->add_subcommand("list", "Lists the pods.");
 
 
     // parse the command line arguments
@@ -122,6 +123,10 @@ int main(int argc, char **argv) {
             }else if( *pod_delete_app ){
 
                 kubepp_app.pod_app.deleteSample();
+
+            }else if( *pod_list_app ){
+
+                kubepp_app.pod_app.displayPods();
 
             }
 

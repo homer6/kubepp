@@ -72,6 +72,15 @@ namespace kubepp::apps {
                 
             }
 
+
+            void displayPods(){
+
+                KubernetesClient kube_client;
+                json pods = kube_client.getPods();
+                cout << pods.dump(4) << endl;
+
+            }
+
     };
 
 }
