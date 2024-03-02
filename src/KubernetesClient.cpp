@@ -1299,10 +1299,10 @@ std::string to_utf8(std::wstring& wide_string)
         json response = json::object();
 
         //check to see if the namespace is specified
-        if( !resource.contains("metadata") || !resource["metadata"].contains("namespace") || !resource["metadata"]["namespace"].is_string() || resource["metadata"]["namespace"].get<string>().empty() ){
-            throw std::runtime_error("The resource must have a 'metadata.namespace' field that is a non-empty string.");
+        string k8s_namespace;
+        if( resource.contains("metadata") && resource["metadata"].contains("namespace") && resource["metadata"]["namespace"].is_string() && !resource["metadata"]["namespace"].get<string>().empty() ){
+            k8s_namespace = resource["metadata"]["namespace"].get<string>();
         }
-        const string k8s_namespace = resource["metadata"]["namespace"].get<string>();
 
         //check to see if the name is specified
         if( !resource.contains("metadata") || !resource["metadata"].contains("name") || !resource["metadata"]["name"].is_string() || resource["metadata"]["name"].get<string>().empty() ){
