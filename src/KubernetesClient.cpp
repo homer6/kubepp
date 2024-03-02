@@ -1728,25 +1728,45 @@ std::string to_utf8(std::wstring& wide_string)
         }
 
         json response = json::object();
-
-        // determine the kind of resource
+        
+        // ensure that the resource has a 'apiVersion' field
+        if( !resource.contains("apiVersion") || !resource["apiVersion"].is_string() || resource["apiVersion"].get<string>().empty() ){
+            throw std::runtime_error("The resource must have a 'apiVersion' field that is a non-empty string.");
+        }
+        const string api_group_version = resource["apiVersion"].get<string>();
 
         // ensure that the resource has a 'kind' field
         if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
             throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
         }
-        string kind = resource["kind"].get<string>();
+        const string kind = resource["kind"].get<string>();
+        const string kind_lower_plural = this->toLower(kind) + "s";
 
 
-        if( kind == "CustomResourceDefinition" ){
-            response = this->createCustomResourceDefinition(resource);
-        }else if( kind == "Pod" ){
-            response = this->createPod(resource);
-        }else{
-            response = this->createCustomResource(resource);
-            //fmt::print("The kind of resource, '{}', is not supported.\n", kind);
-            //throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
+    
+        string api_group = api_group_version.substr(0, api_group_version.find("/"));
+        string api_version = api_group_version.substr(api_group_version.find("/")+1);
+
+        if( this->core_resources.contains(kind) ){
+            api_group = "";
         }
+
+        response = this->createGenericResource(api_group, api_version, kind_lower_plural, resource);
+
+
+
+
+
+
+        // if( kind == "CustomResourceDefinition" ){
+        //     response = this->createCustomResourceDefinition(resource);
+        // }else if( kind == "Pod" ){
+        //     response = this->createPod(resource);
+        // }else{
+        //     response = this->createCustomResource(resource);
+        //     //fmt::print("The kind of resource, '{}', is not supported.\n", kind);
+        //     //throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
+        // }
 
         return response;
 
@@ -1781,33 +1801,72 @@ std::string to_utf8(std::wstring& wide_string)
 
     json KubernetesClient::deleteResource( const json& resource ) const{
 
+        // if( !resource.is_object() ){
+        //     throw std::runtime_error("The resource must be a JSON object.");
+        // }
+
+        // json response = json::object();
+
+        // // determine the kind of resource
+
+        // // ensure that the resource has a 'kind' field
+        // if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
+        //     throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
+        // }
+        // string kind = resource["kind"].get<string>();
+
+
+        // if( kind == "CustomResourceDefinition" ){
+        //     response = this->deleteCustomResourceDefinition(resource);
+        // }else if( kind == "Pod" ){
+        //     response = this->deletePod(resource);
+        // }else{
+        //     response = this->deleteCustomResource(resource);
+        //     //fmt::print("The kind of resource, '{}', is not supported.\n", kind);
+        //     //throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
+        // }
+
+
         if( !resource.is_object() ){
             throw std::runtime_error("The resource must be a JSON object.");
         }
 
         json response = json::object();
-
-        // determine the kind of resource
+        
+        // ensure that the resource has a 'apiVersion' field
+        if( !resource.contains("apiVersion") || !resource["apiVersion"].is_string() || resource["apiVersion"].get<string>().empty() ){
+            throw std::runtime_error("The resource must have a 'apiVersion' field that is a non-empty string.");
+        }
+        const string api_group_version = resource["apiVersion"].get<string>();
 
         // ensure that the resource has a 'kind' field
         if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
             throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
         }
-        string kind = resource["kind"].get<string>();
+        const string kind = resource["kind"].get<string>();
+        const string kind_lower_plural = this->toLower(kind) + "s";
+ 
+        string api_group = api_group_version.substr(0, api_group_version.find("/"));
+        string api_version = api_group_version.substr(api_group_version.find("/")+1);
 
-
-        if( kind == "CustomResourceDefinition" ){
-            response = this->deleteCustomResourceDefinition(resource);
-        }else if( kind == "Pod" ){
-            response = this->deletePod(resource);
-        }else{
-            response = this->deleteCustomResource(resource);
-            //fmt::print("The kind of resource, '{}', is not supported.\n", kind);
-            //throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
+        if( this->core_resources.contains(kind) ){
+            api_group = "";
         }
+
+        response = this->deleteGenericResource(api_group, api_version, kind_lower_plural, resource);
 
         return response;
 
     }
     
+
+    string KubernetesClient::toLower( const string& str ) const{
+
+        string lower_str = str;
+        std::transform(lower_str.begin(), lower_str.end(), lower_str.begin(), [](unsigned char c){ return std::tolower(c); });
+        return lower_str;
+
+    }
+
+
 }

@@ -76,7 +76,7 @@ namespace kubepp{
             json getGenericResource( const string& group, const string& version, const string& plural, const string& name, const string k8s_namespace = "" ) const;
             json getGenericResources( const string& group, const string& version, const string& plural, const string k8s_namespace = "" ) const;
             //doesn't work yet; needs this fix applied in the c client:
-            //json replaceGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const;
+            json replaceGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const;
             json patchGenericResource( const string& group, const string& version, const string& plural, const string& name, const json& patch, const string k8s_namespace = "" ) const;
 
 
@@ -88,6 +88,9 @@ namespace kubepp{
             set<string> resolveNamespaces( const vector<string>& k8s_namespaces = { "all" } ) const;
 
 
+            string toLower( const string& str ) const;
+
+
 
         protected:
             std::shared_ptr<apiClient_t> api_client;
@@ -97,6 +100,8 @@ namespace kubepp{
             //todo: move to smart pointers
             sslConfig_t *sslConfig = nullptr;
             list_t *apiKeys = nullptr;
+
+            const set<string> core_resources = {"Pod", "Service", "ReplicationController", "Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob", "Namespace", "ConfigMap", "Secret", "PersistentVolume", "PersistentVolumeClaim", "StorageClass", "ServiceAccount", "Role", "ClusterRole", "RoleBinding", "ClusterRoleBinding"};  
 
     };
 

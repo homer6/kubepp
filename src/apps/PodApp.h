@@ -46,10 +46,10 @@ namespace kubepp::apps {
                     }
                 })"_json;
 
-                //json response = kube_client.createResources( pod_sample );
+                json response = kube_client.createResources( pod_sample );
                 //json createGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const;
 
-                json response = kube_client.createGenericResource( "", "v1", "pods", pod_sample );
+                //json response = kube_client.createGenericResource( "", "v1", "pods", pod_sample );
 
 
                 cout << response.dump(4) << endl;
@@ -70,9 +70,9 @@ namespace kubepp::apps {
                     }
                 })"_json;
 
-                //json response = kube_client.deleteResources( pod_sample );
+                json response = kube_client.deleteResources( pod_sample );
 
-                json response = kube_client.deleteGenericResource( "", "v1", "pods", pod_sample );
+                //json response = kube_client.deleteGenericResource( "", "v1", "pods", pod_sample );
 
                 cout << response.dump(4) << endl;
                 
