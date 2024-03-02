@@ -1482,8 +1482,6 @@ std::string to_utf8(std::wstring& wide_string)
     }
 
 
-//char* Generic_replaceNamespacedResource(genericClient_t *client, const char *ns, const char *name, const char* body);
-//char* Generic_replaceResource(genericClient_t *client, const char *name, const char* body);
 
     json KubernetesClient::replaceGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const{
 
@@ -1582,12 +1580,6 @@ std::string to_utf8(std::wstring& wide_string)
 
     }
 
-
-
-// char* Generic_patchNamespacedResource(genericClient_t *client, const char *ns, const char *name, const char *body, list_t *queryParameters, list_t *headerParameters, list_t *formParameters,
-//                                       list_t *headerType, list_t *contentType);
-// char* Generic_patchResource(genericClient_t *client, const char *name, const char *body, list_t *queryParameters, list_t *headerParameters, list_t *formParameters, list_t *headerType,
-//                             list_t *contentType);
 
 
     json KubernetesClient::patchGenericResource( const string& group, const string& version, const string& plural, const string& name, const json& patch, const string k8s_namespace ) const{
