@@ -17,6 +17,7 @@ include_directories("${PROJECT_SOURCE_DIR}/src")
 set(SOURCES
     src/KubeppApp.cpp
     src/KubernetesClient.cpp
+    src/ResourceDescription.cpp
     src/cjson.cpp
 )
 

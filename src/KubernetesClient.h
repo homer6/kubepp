@@ -2,6 +2,7 @@
 
 extern "C" {
     #include <apiClient.h>
+    #include <generic.h>
 }
 
 #include <string>
@@ -17,6 +18,9 @@ using std::set;
 
 #include "json_fwd.hpp"
 using json = nlohmann::json;
+
+
+#include "ResourceDescription.h"
 
 
 namespace kubepp{
@@ -71,13 +75,13 @@ namespace kubepp{
 
 
 
-            json createGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const;
-            json deleteGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const;
-            json getGenericResource( const string& group, const string& version, const string& plural, const string& name, const string k8s_namespace = "" ) const;
-            json getGenericResources( const string& group, const string& version, const string& plural, const string k8s_namespace = "" ) const;
+            json createGenericResource( const ResourceDescription& resource_description, const json& resource ) const;
+            json deleteGenericResource( const ResourceDescription& resource_description, const json& resource ) const;
+            json getGenericResource( const ResourceDescription& resource_description ) const;
+            json getGenericResources( const ResourceDescription& resource_description ) const;
             //doesn't work yet; needs this fix applied in the c client:
-            json replaceGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const;
-            json patchGenericResource( const string& group, const string& version, const string& plural, const string& name, const json& patch, const string k8s_namespace = "" ) const;
+            json replaceGenericResource( const ResourceDescription& resource_description, const json& resource ) const;
+            json patchGenericResource( const ResourceDescription& resource_description, const json& patch ) const;
 
 
             //doesn't work yet; needs this fix applied in the c client: https://github.com/kubernetes-client/c/issues/222
@@ -88,7 +92,7 @@ namespace kubepp{
             set<string> resolveNamespaces( const vector<string>& k8s_namespaces = { "all" } ) const;
 
 
-            string toLower( const string& str ) const;
+            std::shared_ptr<genericClient_t> createGenericClient( const ResourceDescription& resource_description ) const;
 
 
 
@@ -100,8 +104,6 @@ namespace kubepp{
             //todo: move to smart pointers
             sslConfig_t *sslConfig = nullptr;
             list_t *apiKeys = nullptr;
-
-            const set<string> core_resources = {"Pod", "Service", "ReplicationController", "Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob", "Namespace", "ConfigMap", "Secret", "PersistentVolume", "PersistentVolumeClaim", "StorageClass", "ServiceAccount", "Role", "ClusterRole", "RoleBinding", "ClusterRoleBinding"};  
 
     };
 

@@ -84,7 +84,17 @@ namespace kubepp::apps {
                 KubernetesClient kube_client;
                 //json pods = kube_client.getPods();
 
-                json response = kube_client.getGenericResources( "", "v1", "pods", "default" );
+                // create a ResourceDescription object for pods in the default namespace
+                const ResourceDescription resource_description = ResourceDescription( R"({
+                    "apiVersion": "v1",
+                    "kind": "Pod",
+                    "metadata": {
+                        "namespace": "default"
+                    }
+                })"_json );
+
+
+                json response = kube_client.getGenericResources( resource_description );
 
                 cout << response.dump(4) << endl;
 
@@ -112,8 +122,9 @@ namespace kubepp::apps {
                     }
                 })"_json;
 
+                const ResourceDescription resource_description = ResourceDescription(pod_sample);
 
-                json response = kube_client.replaceGenericResource( "", "v1", "pods", pod_sample );
+                json response = kube_client.replaceGenericResource( resource_description, pod_sample );
 
                 cout << response.dump(4) << endl;
 
@@ -145,7 +156,10 @@ namespace kubepp::apps {
                     { "op": "replace", "path": "/spec/containers/0/image", "value": "nginx:1.16.1" }
                 ])"_json;
 
-                json response = kube_client.patchGenericResource( "", "v1", "pods", "nginx", patch, "default" );
+                const ResourceDescription resource_description = ResourceDescription(pod_sample);
+
+
+                json response = kube_client.patchGenericResource( resource_description, patch );
 
                 cout << response.dump(4) << endl;
 

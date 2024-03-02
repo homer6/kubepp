@@ -1204,47 +1204,28 @@ std::string to_utf8(std::wstring& wide_string)
 
 
 
-
-    json KubernetesClient::createGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const{
+    json KubernetesClient::createGenericResource( const ResourceDescription& resource_description, const json& resource ) const{
 
         json response = json::object();
 
         const string resource_string = resource.dump();
 
 
-        //check to see if the namespace is specified (optional for cluster-scoped resources)
-        string k8s_namespace;
-        if( resource.contains("metadata") && resource["metadata"].contains("namespace") && resource["metadata"]["namespace"].is_string() && !resource["metadata"]["namespace"].get<string>().empty() ){
-            k8s_namespace = resource["metadata"]["namespace"].get<string>();
-        }
-
         //check to see if the kind is specified
         if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
             throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
         }
-        const string kind = resource["kind"].get<string>();
 
         //check to see if the apiVersion is specified
         if( !resource.contains("apiVersion") || !resource["apiVersion"].is_string() || resource["apiVersion"].get<string>().empty() ){
             throw std::runtime_error("The resource must have a 'apiVersion' field that is a non-empty string.");
         }
-        const string api_version = resource["apiVersion"].get<string>();
 
 
-        //assert the api_version matches group/version
-        // const string group_version = group + "/" + version;
-        // if( api_version != group_version ){
-        //     throw std::runtime_error("The apiVersion must match the group and version: " + group_version + " != " + api_version );
-        // }
+        auto generic_client = this->createGenericClient(resource_description);
 
 
-        std::shared_ptr<genericClient_t> generic_client( 
-                                        genericClient_create(api_client.get(), group.c_str(), version.c_str(), plural.c_str()), 
-                                        genericClient_free 
-                                    );
-
-
-        if( k8s_namespace.empty() ){
+        if( resource_description.k8s_namespace.empty() ){
 
             //cluster-scoped custom resource
 
@@ -1272,7 +1253,7 @@ std::string to_utf8(std::wstring& wide_string)
             std::shared_ptr<char> api_response(
                                                 Generic_createNamespacedResource(
                                                     generic_client.get(), 
-                                                    k8s_namespace.c_str(), 
+                                                    resource_description.k8s_namespace.c_str(), 
                                                     resource_string.c_str()
                                                 ),
                                                 free
@@ -1294,37 +1275,27 @@ std::string to_utf8(std::wstring& wide_string)
 
 
 
-    json KubernetesClient::deleteGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const{
+    json KubernetesClient::deleteGenericResource( const ResourceDescription& resource_description, const json& resource ) const{
 
         json response = json::object();
-
-        //check to see if the namespace is specified
-        string k8s_namespace;
-        if( resource.contains("metadata") && resource["metadata"].contains("namespace") && resource["metadata"]["namespace"].is_string() && !resource["metadata"]["namespace"].get<string>().empty() ){
-            k8s_namespace = resource["metadata"]["namespace"].get<string>();
-        }
 
         //check to see if the name is specified
         if( !resource.contains("metadata") || !resource["metadata"].contains("name") || !resource["metadata"]["name"].is_string() || resource["metadata"]["name"].get<string>().empty() ){
             throw std::runtime_error("The resource must have a 'metadata.name' field that is a non-empty string.");
         }
-        const string resource_name = resource["metadata"]["name"].get<string>();
 
 
-        std::shared_ptr<genericClient_t> generic_client( 
-                                        genericClient_create(api_client.get(), group.c_str(), version.c_str(), plural.c_str()), 
-                                        genericClient_free 
-                                    );
+        auto generic_client = this->createGenericClient(resource_description);
 
 
-        if( k8s_namespace.empty() ){
+        if( resource_description.k8s_namespace.empty() ){
 
             //cluster-scoped custom resource
 
             std::shared_ptr<char> api_response(
                                                 Generic_deleteResource(
                                                     generic_client.get(), 
-                                                    resource_name.c_str()
+                                                    resource_description.name.c_str()
                                                 ),
                                                 free
                                             );
@@ -1344,8 +1315,8 @@ std::string to_utf8(std::wstring& wide_string)
             std::shared_ptr<char> api_response(
                                                 Generic_deleteNamespacedResource(
                                                     generic_client.get(), 
-                                                    k8s_namespace.c_str(), 
-                                                    resource_name.c_str()
+                                                    resource_description.k8s_namespace.c_str(), 
+                                                    resource_description.name.c_str()
                                                 ),
                                                 free
                                             );
@@ -1366,23 +1337,22 @@ std::string to_utf8(std::wstring& wide_string)
     }
 
 
-    json KubernetesClient::getGenericResource( const string& group, const string& version, const string& plural, const string& name, const string k8s_namespace ) const{
+
+
+    json KubernetesClient::getGenericResource( const ResourceDescription& resource_description ) const{
 
         json response = json::object();
 
-        std::shared_ptr<genericClient_t> generic_client( 
-                                        genericClient_create(api_client.get(), group.c_str(), version.c_str(), plural.c_str()), 
-                                        genericClient_free 
-                                    );
+        auto generic_client = this->createGenericClient(resource_description);
 
-        if( k8s_namespace.empty() ){
+        if( resource_description.k8s_namespace.empty() ){
 
             //cluster-scoped custom resource
 
             std::shared_ptr<char> api_response(
                                                 Generic_readResource(
                                                     generic_client.get(), 
-                                                    name.c_str()
+                                                    resource_description.name.c_str()
                                                 ),
                                                 free
                                             );
@@ -1402,8 +1372,8 @@ std::string to_utf8(std::wstring& wide_string)
             std::shared_ptr<char> api_response(
                                                 Generic_readNamespacedResource(
                                                     generic_client.get(), 
-                                                    k8s_namespace.c_str(), 
-                                                    name.c_str()
+                                                    resource_description.k8s_namespace.c_str(), 
+                                                    resource_description.name.c_str()
                                                 ),
                                                 free
                                             );
@@ -1426,16 +1396,14 @@ std::string to_utf8(std::wstring& wide_string)
 
 
 
-    json KubernetesClient::getGenericResources( const string& group, const string& version, const string& plural, const string k8s_namespace ) const{
+
+    json KubernetesClient::getGenericResources( const ResourceDescription& resource_description ) const{
 
         json response = json::array();
 
-        std::shared_ptr<genericClient_t> generic_client( 
-                                        genericClient_create(api_client.get(), group.c_str(), version.c_str(), plural.c_str()), 
-                                        genericClient_free 
-                                    );
+        auto generic_client = this->createGenericClient(resource_description);
 
-        if( k8s_namespace.empty() ){
+        if( resource_description.k8s_namespace.empty() ){
 
             //cluster-scoped custom resource
 
@@ -1461,7 +1429,7 @@ std::string to_utf8(std::wstring& wide_string)
             std::shared_ptr<char> api_response(
                                                 Generic_listNamespaced(
                                                     generic_client.get(), 
-                                                    k8s_namespace.c_str()
+                                                    resource_description.k8s_namespace.c_str()
                                                 ),
                                                 free
                                             );
@@ -1483,61 +1451,37 @@ std::string to_utf8(std::wstring& wide_string)
 
 
 
-    json KubernetesClient::replaceGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const{
+
+    json KubernetesClient::replaceGenericResource( const ResourceDescription& resource_description, const json& resource ) const{
 
         json response = json::object();
 
-        //check to see if the namespace is specified (optional for cluster-scoped resources)
-        string k8s_namespace;
-        if( resource.contains("metadata") && resource["metadata"].contains("namespace") && resource["metadata"]["namespace"].is_string() && !resource["metadata"]["namespace"].get<string>().empty() ){
-            k8s_namespace = resource["metadata"]["namespace"].get<string>();
-        }
 
         //check to see if the kind is specified
         if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
             throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
         }
-        const string kind = resource["kind"].get<string>();
 
         //check to see if the apiVersion is specified
         if( !resource.contains("apiVersion") || !resource["apiVersion"].is_string() || resource["apiVersion"].get<string>().empty() ){
             throw std::runtime_error("The resource must have a 'apiVersion' field that is a non-empty string.");
         }
 
-        //check to see if the name is specified
-        if( !resource.contains("metadata") || !resource["metadata"].contains("name") || !resource["metadata"]["name"].is_string() || resource["metadata"]["name"].get<string>().empty() ){
-            throw std::runtime_error("The resource must have a 'metadata.name' field that is a non-empty string.");
-        }
-        const string resource_name = resource["metadata"]["name"].get<string>();
-
-
-        // json sent_resource = resource;
-        // sent_resource.erase("kind");
-        // sent_resource.erase("apiVersion");
-        // //sent_resource.erase("metadata");
-        // sent_resource["metadata"].erase("labels");
         const string resource_string = resource.dump();
 
 
-        const string api_version = resource["apiVersion"].get<string>();
+
+        auto generic_client = this->createGenericClient(resource_description);
 
 
-
-        std::shared_ptr<genericClient_t> generic_client( 
-                                        genericClient_create(api_client.get(), group.c_str(), version.c_str(), plural.c_str()), 
-                                        genericClient_free 
-                                    );
-
-
-        if( k8s_namespace.empty() ){
-
+        if( resource_description.k8s_namespace.empty() ){
 
             //cluster-scoped custom resource
 
             std::shared_ptr<char> api_response(
                                                 Generic_replaceResource(
                                                     generic_client.get(),
-                                                    resource_name.c_str(),
+                                                    resource_description.name.c_str(),
                                                     resource_string.c_str()
                                                 ),
                                                 free
@@ -1558,8 +1502,8 @@ std::string to_utf8(std::wstring& wide_string)
             std::shared_ptr<char> api_response(
                                                 Generic_replaceNamespacedResource(
                                                     generic_client.get(), 
-                                                    k8s_namespace.c_str(),
-                                                    resource_name.c_str(),
+                                                    resource_description.k8s_namespace.c_str(),
+                                                    resource_description.name.c_str(),
                                                     resource_string.c_str()
                                                 ),
                                                 free
@@ -1582,17 +1526,14 @@ std::string to_utf8(std::wstring& wide_string)
 
 
 
-    json KubernetesClient::patchGenericResource( const string& group, const string& version, const string& plural, const string& name, const json& patch, const string k8s_namespace ) const{
+    json KubernetesClient::patchGenericResource( const ResourceDescription& resource_description, const json& patch ) const{
 
         json response = json::object();
 
         const string patch_string = patch.dump();
 
 
-        std::shared_ptr<genericClient_t> generic_client( 
-                                        genericClient_create(api_client.get(), group.c_str(), version.c_str(), plural.c_str()), 
-                                        genericClient_free 
-                                    );
+        auto generic_client = this->createGenericClient(resource_description);
 
         /*
         
@@ -1616,14 +1557,14 @@ std::string to_utf8(std::wstring& wide_string)
         list_addElement(patch_content_type_list.get(), (void*)patch_content_type.c_str());
         
 
-        if( k8s_namespace.empty() ){
+        if( resource_description.k8s_namespace.empty() ){
 
             //cluster-scoped custom resource
 
             std::shared_ptr<char> api_response(
                                                 Generic_patchResource(
                                                     generic_client.get(), 
-                                                    name.c_str(),
+                                                    resource_description.name.c_str(),
                                                     patch_string.c_str(),
                                                     NULL, /* queryParameters */
                                                     NULL, /* headerParameters */
@@ -1649,8 +1590,8 @@ std::string to_utf8(std::wstring& wide_string)
             std::shared_ptr<char> api_response(
                                                 Generic_patchNamespacedResource(
                                                     generic_client.get(), 
-                                                    k8s_namespace.c_str(),
-                                                    name.c_str(),
+                                                    resource_description.k8s_namespace.c_str(),
+                                                    resource_description.name.c_str(),
                                                     patch_string.c_str(),
                                                     NULL, /* queryParameters */
                                                     NULL, /* headerParameters */
@@ -1729,44 +1670,9 @@ std::string to_utf8(std::wstring& wide_string)
 
         json response = json::object();
         
-        // ensure that the resource has a 'apiVersion' field
-        if( !resource.contains("apiVersion") || !resource["apiVersion"].is_string() || resource["apiVersion"].get<string>().empty() ){
-            throw std::runtime_error("The resource must have a 'apiVersion' field that is a non-empty string.");
-        }
-        const string api_group_version = resource["apiVersion"].get<string>();
+        const ResourceDescription resource_description(resource);
 
-        // ensure that the resource has a 'kind' field
-        if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
-            throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
-        }
-        const string kind = resource["kind"].get<string>();
-        const string kind_lower_plural = this->toLower(kind) + "s";
-
-
-    
-        string api_group = api_group_version.substr(0, api_group_version.find("/"));
-        string api_version = api_group_version.substr(api_group_version.find("/")+1);
-
-        if( this->core_resources.contains(kind) ){
-            api_group = "";
-        }
-
-        response = this->createGenericResource(api_group, api_version, kind_lower_plural, resource);
-
-
-
-
-
-
-        // if( kind == "CustomResourceDefinition" ){
-        //     response = this->createCustomResourceDefinition(resource);
-        // }else if( kind == "Pod" ){
-        //     response = this->createPod(resource);
-        // }else{
-        //     response = this->createCustomResource(resource);
-        //     //fmt::print("The kind of resource, '{}', is not supported.\n", kind);
-        //     //throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
-        // }
+        response = this->createGenericResource(resource_description, resource);
 
         return response;
 
@@ -1801,72 +1707,31 @@ std::string to_utf8(std::wstring& wide_string)
 
     json KubernetesClient::deleteResource( const json& resource ) const{
 
-        // if( !resource.is_object() ){
-        //     throw std::runtime_error("The resource must be a JSON object.");
-        // }
+        const ResourceDescription resource_description(resource);
 
-        // json response = json::object();
-
-        // // determine the kind of resource
-
-        // // ensure that the resource has a 'kind' field
-        // if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
-        //     throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
-        // }
-        // string kind = resource["kind"].get<string>();
-
-
-        // if( kind == "CustomResourceDefinition" ){
-        //     response = this->deleteCustomResourceDefinition(resource);
-        // }else if( kind == "Pod" ){
-        //     response = this->deletePod(resource);
-        // }else{
-        //     response = this->deleteCustomResource(resource);
-        //     //fmt::print("The kind of resource, '{}', is not supported.\n", kind);
-        //     //throw std::runtime_error( fmt::format("The kind of resource, '{}', is not supported.", kind) );
-        // }
-
-
-        if( !resource.is_object() ){
-            throw std::runtime_error("The resource must be a JSON object.");
-        }
-
-        json response = json::object();
-        
-        // ensure that the resource has a 'apiVersion' field
-        if( !resource.contains("apiVersion") || !resource["apiVersion"].is_string() || resource["apiVersion"].get<string>().empty() ){
-            throw std::runtime_error("The resource must have a 'apiVersion' field that is a non-empty string.");
-        }
-        const string api_group_version = resource["apiVersion"].get<string>();
-
-        // ensure that the resource has a 'kind' field
-        if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
-            throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
-        }
-        const string kind = resource["kind"].get<string>();
-        const string kind_lower_plural = this->toLower(kind) + "s";
- 
-        string api_group = api_group_version.substr(0, api_group_version.find("/"));
-        string api_version = api_group_version.substr(api_group_version.find("/")+1);
-
-        if( this->core_resources.contains(kind) ){
-            api_group = "";
-        }
-
-        response = this->deleteGenericResource(api_group, api_version, kind_lower_plural, resource);
-
-        return response;
+        return this->deleteGenericResource(resource_description, resource);
 
     }
     
 
-    string KubernetesClient::toLower( const string& str ) const{
+   
 
-        string lower_str = str;
-        std::transform(lower_str.begin(), lower_str.end(), lower_str.begin(), [](unsigned char c){ return std::tolower(c); });
-        return lower_str;
+    std::shared_ptr<genericClient_t> KubernetesClient::createGenericClient( const ResourceDescription& resource_description ) const{
 
+        std::shared_ptr<genericClient_t> generic_client( 
+                            genericClient_create( 
+                                api_client.get(), 
+                                resource_description.api_group.c_str(),
+                                resource_description.api_version.c_str(),
+                                resource_description.kind_lower_plural.c_str()
+                            ), 
+                            genericClient_free 
+                        );
+
+        return generic_client;
+        
     }
 
 
 }
+
