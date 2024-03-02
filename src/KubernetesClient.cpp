@@ -1377,9 +1377,76 @@ int main(int argc, char *argv[])
 
 
 
+    json KubernetesClient::deleteGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const{
+
+        json response = json::object();
+
+        //check to see if the namespace is specified
+        if( !resource.contains("metadata") || !resource["metadata"].contains("namespace") || !resource["metadata"]["namespace"].is_string() || resource["metadata"]["namespace"].get<string>().empty() ){
+            throw std::runtime_error("The resource must have a 'metadata.namespace' field that is a non-empty string.");
+        }
+        const string k8s_namespace = resource["metadata"]["namespace"].get<string>();
+
+        //check to see if the name is specified
+        if( !resource.contains("metadata") || !resource["metadata"].contains("name") || !resource["metadata"]["name"].is_string() || resource["metadata"]["name"].get<string>().empty() ){
+            throw std::runtime_error("The resource must have a 'metadata.name' field that is a non-empty string.");
+        }
+        const string resource_name = resource["metadata"]["name"].get<string>();
 
 
+        std::shared_ptr<genericClient_t> generic_client( 
+                                        genericClient_create(api_client.get(), group.c_str(), version.c_str(), plural.c_str()), 
+                                        genericClient_free 
+                                    );
 
+
+        if( k8s_namespace.empty() ){
+
+            //cluster-scoped custom resource
+
+            std::shared_ptr<char> api_response(
+                                                Generic_deleteResource(
+                                                    generic_client.get(), 
+                                                    resource_name.c_str()
+                                                ),
+                                                free
+                                            );
+
+            if( api_response ){
+                cjson cjson_response(api_response.get());
+                if( cjson_response ){
+                    response = cjson_response.toJson();
+                }
+                
+            }
+
+        }else{
+
+            //namespace-scoped custom resource
+
+            std::shared_ptr<char> api_response(
+                                                Generic_deleteNamespacedResource(
+                                                    generic_client.get(), 
+                                                    k8s_namespace.c_str(), 
+                                                    resource_name.c_str()
+                                                ),
+                                                free
+                                            );
+
+            if( api_response ){
+
+                cjson cjson_response(api_response.get());
+                if( cjson_response ){
+                    response = cjson_response.toJson();
+                }
+
+            }
+
+        }
+
+        return response;
+
+    }
 
 
     set<string> KubernetesClient::resolveNamespaces( const vector<string>& k8s_namespaces ) const{

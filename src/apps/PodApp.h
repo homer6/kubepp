@@ -70,7 +70,9 @@ namespace kubepp::apps {
                     }
                 })"_json;
 
-                json response = kube_client.deleteResources( pod_sample );
+                //json response = kube_client.deleteResources( pod_sample );
+
+                json response = kube_client.deleteGenericResource( "", "v1", "pods", pod_sample );
 
                 cout << response.dump(4) << endl;
                 
