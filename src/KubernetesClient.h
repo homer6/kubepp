@@ -71,6 +71,8 @@ namespace kubepp{
 
 
 
+            json createGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const;
+
 
 
             //doesn't work yet; needs this fix applied in the c client: https://github.com/kubernetes-client/c/issues/222
