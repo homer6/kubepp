@@ -119,6 +119,80 @@ namespace kubepp::apps {
 
             }
 
+
+            void patchSample(){
+
+                KubernetesClient kube_client;
+                
+                json pod_sample = R"({
+                    "apiVersion": "v1",
+                    "kind": "Pod",
+                    "metadata": {
+                        "namespace": "default",
+                        "name": "nginx"
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "name": "nginx",
+                                "image": "nginx:1.15.8"
+                            }
+                        ]
+                    }
+                })"_json;
+
+                json patch = R"([
+                    { "op": "replace", "path": "/spec/containers/0/image", "value": "nginx:1.16.1" }
+                ])"_json;
+
+                json response = kube_client.patchGenericResource( "", "v1", "pods", "nginx", patch, "default" );
+
+                cout << response.dump(4) << endl;
+
+
+                // // Original Pod JSON
+                // json original = R"({
+                //     "apiVersion": "v1",
+                //     "kind": "Pod",
+                //     "metadata": {
+                //         "namespace": "default",
+                //         "name": "nginx"
+                //     },
+                //     "spec": {
+                //         "containers": [
+                //             {
+                //                 "name": "nginx",
+                //                 "image": "nginx:old_version"
+                //             }
+                //         ]
+                //     }
+                // })"_json;
+
+                // // Modified Pod JSON
+                // json modified = R"({
+                //     "apiVersion": "v1",
+                //     "kind": "Pod",
+                //     "metadata": {
+                //         "namespace": "default",
+                //         "name": "nginx"
+                //     },
+                //     "spec": {
+                //         "containers": [
+                //             {
+                //                 "name": "nginx",
+                //                 "image": "nginx:new_version"
+                //             }
+                //         ]
+                //     }
+                // })"_json;
+
+                // // Generate JSON Patch
+                // json patch = json::diff(original, modified);
+                // std::cout << patch.dump(4) << std::endl;
+
+
+            }
+
     };
 
 }

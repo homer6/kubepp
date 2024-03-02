@@ -50,6 +50,7 @@ int main(int argc, char **argv) {
         CLI::App *pod_delete_app = pod_app->add_subcommand("delete", "Deletes the a sample pod.");
         CLI::App *pod_list_app = pod_app->add_subcommand("list", "Lists the pods.");
         CLI::App *pod_replace_app = pod_app->add_subcommand("replace", "Replaces the a sample pod.");
+        CLI::App *pod_patch_app = pod_app->add_subcommand("patch", "Patches the a sample pod.");
 
 
     // parse the command line arguments
@@ -132,6 +133,10 @@ int main(int argc, char **argv) {
             }else if( *pod_replace_app ){
 
                 kubepp_app.pod_app.replaceSample();
+
+            }else if( *pod_patch_app ){
+
+                kubepp_app.pod_app.patchSample();
 
             }
 

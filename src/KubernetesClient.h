@@ -76,7 +76,7 @@ namespace kubepp{
             json getGenericResource( const string& group, const string& version, const string& plural, const string& name, const string k8s_namespace = "" ) const;
             json getGenericResources( const string& group, const string& version, const string& plural, const string k8s_namespace = "" ) const;
             json replaceGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const;
-
+            json patchGenericResource( const string& group, const string& version, const string& plural, const string& name, const json& patch, const string k8s_namespace = "" ) const;
 
 
             //doesn't work yet; needs this fix applied in the c client: https://github.com/kubernetes-client/c/issues/222

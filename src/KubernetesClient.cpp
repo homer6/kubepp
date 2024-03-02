@@ -1584,6 +1584,106 @@ std::string to_utf8(std::wstring& wide_string)
 
 
 
+// char* Generic_patchNamespacedResource(genericClient_t *client, const char *ns, const char *name, const char *body, list_t *queryParameters, list_t *headerParameters, list_t *formParameters,
+//                                       list_t *headerType, list_t *contentType);
+// char* Generic_patchResource(genericClient_t *client, const char *name, const char *body, list_t *queryParameters, list_t *headerParameters, list_t *formParameters, list_t *headerType,
+//                             list_t *contentType);
+
+
+    json KubernetesClient::patchGenericResource( const string& group, const string& version, const string& plural, const string& name, const json& patch, const string k8s_namespace ) const{
+
+        json response = json::object();
+
+        const string patch_string = patch.dump();
+
+
+        std::shared_ptr<genericClient_t> generic_client( 
+                                        genericClient_create(api_client.get(), group.c_str(), version.c_str(), plural.c_str()), 
+                                        genericClient_free 
+                                    );
+
+        /*
+        
+        const char *patchBody = "[{\"op\": \"replace\", \"path\": \"/metadata/labels/foo\", \"value\": \"qux\" }]";
+        list_t *contentType = list_createList();
+        // Kubernetes supports multiple content types:
+        list_addElement(contentType, "application/json-patch+json");
+        // list_addElement(contentType, "application/merge-patch+json");
+        // list_addElement(contentType, "application/strategic-merge-patch+json");
+        // list_addElement(contentType, "application/apply-patch+yaml");
+        list_freeList(contentType);
+        free(patch);
+
+        */
+
+
+        const string patch_content_type = "application/json-patch+json";// "application/merge-patch+json";
+
+        //create a list_t* for the content-type, wrapped in shared_ptr
+        std::shared_ptr<list_t> patch_content_type_list( list_createList(), list_freeList );
+        list_addElement(patch_content_type_list.get(), (void*)patch_content_type.c_str());
+        
+
+        if( k8s_namespace.empty() ){
+
+            //cluster-scoped custom resource
+
+            std::shared_ptr<char> api_response(
+                                                Generic_patchResource(
+                                                    generic_client.get(), 
+                                                    name.c_str(),
+                                                    patch_string.c_str(),
+                                                    NULL, /* queryParameters */
+                                                    NULL, /* headerParameters */
+                                                    NULL, /* formParameters */
+                                                    NULL, /* headerType */
+                                                    const_cast<list_t*>(patch_content_type_list.get())  /* contentType */
+                                                ),
+                                                free
+                                            );
+
+            if( api_response ){
+                cjson cjson_response(api_response.get());
+                if( cjson_response ){
+                    response = cjson_response.toJson();
+                }                
+            }
+
+
+        }else{
+
+            //namespace-scoped custom resource
+
+            std::shared_ptr<char> api_response(
+                                                Generic_patchNamespacedResource(
+                                                    generic_client.get(), 
+                                                    k8s_namespace.c_str(),
+                                                    name.c_str(),
+                                                    patch_string.c_str(),
+                                                    NULL, /* queryParameters */
+                                                    NULL, /* headerParameters */
+                                                    NULL, /* formParameters */
+                                                    NULL, /* headerType */
+                                                    const_cast<list_t*>(patch_content_type_list.get())  /* contentType */
+                                                ),
+                                                free
+                                            );
+
+            if( api_response ){
+
+                cjson cjson_response(api_response.get());
+                if( cjson_response ){
+                    response = cjson_response.toJson();
+                }
+
+            }
+
+        }
+
+        return response;
+
+    }
+
 
 
 
