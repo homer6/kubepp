@@ -141,7 +141,15 @@ namespace kubepp{
 
     }
 
+#include <codecvt> // codecvt_utf8
+#include <locale>  // wstring_convert
 
+// encoding function
+std::string to_utf8(std::wstring& wide_string)
+{
+    static std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
+    return utf8_conv.to_bytes(wide_string);
+}
 
 
     json KubernetesClient::getPods( const vector<string>& k8s_namespaces ) const{
@@ -152,32 +160,100 @@ namespace kubepp{
 
         for( const string& k8s_namespace : namespaces ){
 
-            std::shared_ptr<v1_pod_list_t> pod_list( 
-                                                    CoreV1API_listNamespacedPod(
-                                                        const_cast<apiClient_t*>(api_client.get()), 
-                                                        const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-                                                        NULL,    /* pretty */
-                                                        NULL,    /* allowWatchBookmarks */
-                                                        NULL,    /* continue */
-                                                        NULL,    /* fieldSelector */
-                                                        NULL,    /* labelSelector */
-                                                        NULL,    /* limit */
-                                                        NULL,    /* resourceVersion */
-                                                        NULL,    /* resourceVersionMatch */
-                                                        NULL,    /* sendInitialEvents */
-                                                        NULL,    /* timeoutSeconds */
-                                                        NULL     /* watch */
-                                                    ),
-                                                    v1_pod_list_free
-                                                );
+            // std::shared_ptr<v1_pod_list_t> pod_list( 
+            //                                         CoreV1API_listNamespacedPod(
+            //                                             const_cast<apiClient_t*>(api_client.get()), 
+            //                                             const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+            //                                             NULL,    /* pretty */
+            //                                             NULL,    /* allowWatchBookmarks */
+            //                                             NULL,    /* continue */
+            //                                             NULL,    /* fieldSelector */
+            //                                             NULL,    /* labelSelector */
+            //                                             NULL,    /* limit */
+            //                                             NULL,    /* resourceVersion */
+            //                                             NULL,    /* resourceVersionMatch */
+            //                                             NULL,    /* sendInitialEvents */
+            //                                             NULL,    /* timeoutSeconds */
+            //                                             NULL     /* watch */
+            //                                         ),
+            //                                         v1_pod_list_free
+            //                                     );
+
+
+            char *response = (char*)CoreV1API_listNamespacedPod(
+                const_cast<apiClient_t*>(api_client.get()), 
+                const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+                NULL,    /* pretty */
+                NULL,    /* allowWatchBookmarks */
+                NULL,    /* continue */
+                NULL,    /* fieldSelector */
+                NULL,    /* labelSelector */
+                NULL,    /* limit */
+                NULL,    /* resourceVersion */
+                NULL,    /* resourceVersionMatch */
+                NULL,    /* sendInitialEvents */
+                NULL,    /* timeoutSeconds */
+                NULL     /* watch */
+            );
+
+            // std::shared_ptr<char> pod_list( 
+            //                                         (char*)CoreV1API_listNamespacedPod(
+            //                                             const_cast<apiClient_t*>(api_client.get()), 
+            //                                             const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+            //                                             NULL,    /* pretty */
+            //                                             NULL,    /* allowWatchBookmarks */
+            //                                             NULL,    /* continue */
+            //                                             NULL,    /* fieldSelector */
+            //                                             NULL,    /* labelSelector */
+            //                                             NULL,    /* limit */
+            //                                             NULL,    /* resourceVersion */
+            //                                             NULL,    /* resourceVersionMatch */
+            //                                             NULL,    /* sendInitialEvents */
+            //                                             NULL,    /* timeoutSeconds */
+            //                                             NULL     /* watch */
+            //                                         ),
+            //                                         free
+            //                                     );
 
 
             //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
 
-            if( pod_list ){
+            if( response ){
 
                 //fmt::print("Get pod list for namespace '{}':\n", k8s_namespace);
 
+                
+                //std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+                //std::string my_string = converter.to_bytes( (wchar_t*) pod_list.get() );
+
+                //string my_string( cjson(pod_list.get()) );
+
+
+                //output the string as hexidecimal
+                // for( char c : my_string ){
+
+                //     cout << std::hex << (int)c << " ";
+
+                // }
+
+                //return json::object();
+
+
+                //json pod_list_json = json::parse(my_string);
+
+                json pod_list_json = cjson( response ).toJson();
+    //            cout << pod_list_json.dump(4) << endl;
+
+
+                if( pod_list_json.contains("items") && pod_list_json["items"].is_array() ){
+                    for( json pod_json : pod_list_json["items"] ){
+                        pod_json["apiVersion"] = "v1";
+                        pod_json["kind"] = "Pod";
+                        pods.push_back(pod_json);
+                    }
+                }
+
+                /*
                 listEntry_t *listEntry = NULL;
                 v1_pod_t *pod = NULL;
 
@@ -187,22 +263,22 @@ namespace kubepp{
 
                     pod = (v1_pod_t *)listEntry->data;
 
+                    //json pod_json = json::object();
+
                     json pod_json = cjson( v1_pod_convertToJSON(pod) ).toJson();
 
-                    pod_json["apiVersion"] = "v1";
-                    pod_json["kind"] = "Pod";
-                    pod_json["metadata"] = cjson( v1_object_meta_convertToJSON(pod->metadata) ).toJson();
-                    pod_json["spec"] = cjson( v1_pod_spec_convertToJSON(pod->spec) ).toJson();
+                    //pod_json["apiVersion"] = "v1";
+                    //pod_json["kind"] = "Pod";
+                    //pod_json["metadata"] = cjson( v1_object_meta_convertToJSON(pod->metadata) ).toJson();
+                    //pod_json["spec"] = cjson( v1_pod_spec_convertToJSON(pod->spec) ).toJson();
 
-                    //CoreV1API_listNamespacedPod doesn't parse the statuses, even though they are in the response payload: https://github.com/kubernetes-client/c/issues/221
-
-                    pod_json["status"] = cjson( v1_pod_status_convertToJSON(pod->status) ).toJson();
+                    //pod_json["status"] = cjson( v1_pod_status_convertToJSON(pod->status) ).toJson();
 
                     pods.push_back(pod_json);
 
                 }
                 
-
+                */
             }else{
 
                 fmt::print("Cannot get any pod.\n");

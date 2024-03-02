@@ -5,6 +5,10 @@ project(kubepp VERSION 0.1)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# Set the build type to Debug if it's not explicitly set by the user
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
 
 # Include directories for your project
 include_directories("${PROJECT_SOURCE_DIR}/src")
