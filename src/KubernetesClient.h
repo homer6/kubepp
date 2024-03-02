@@ -73,6 +73,9 @@ namespace kubepp{
 
             json createGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const;
             json deleteGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const;
+            json getGenericResource( const string& group, const string& version, const string& plural, const string& name, const string k8s_namespace = "" ) const;
+            json getGenericResources( const string& group, const string& version, const string& plural, const string k8s_namespace = "" ) const;
+            //json patchGenericResource( const string& group, const string& version, const string& plural, const string& name, const json& patch ) const;
 
 
 
