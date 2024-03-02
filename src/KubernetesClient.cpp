@@ -1482,6 +1482,109 @@ std::string to_utf8(std::wstring& wide_string)
     }
 
 
+//char* Generic_replaceNamespacedResource(genericClient_t *client, const char *ns, const char *name, const char* body);
+//char* Generic_replaceResource(genericClient_t *client, const char *name, const char* body);
+
+    json KubernetesClient::replaceGenericResource( const string& group, const string& version, const string& plural, const json& resource ) const{
+
+        json response = json::object();
+
+        //check to see if the namespace is specified (optional for cluster-scoped resources)
+        string k8s_namespace;
+        if( resource.contains("metadata") && resource["metadata"].contains("namespace") && resource["metadata"]["namespace"].is_string() && !resource["metadata"]["namespace"].get<string>().empty() ){
+            k8s_namespace = resource["metadata"]["namespace"].get<string>();
+        }
+
+        //check to see if the kind is specified
+        if( !resource.contains("kind") || !resource["kind"].is_string() || resource["kind"].get<string>().empty() ){
+            throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
+        }
+        const string kind = resource["kind"].get<string>();
+
+        //check to see if the apiVersion is specified
+        if( !resource.contains("apiVersion") || !resource["apiVersion"].is_string() || resource["apiVersion"].get<string>().empty() ){
+            throw std::runtime_error("The resource must have a 'apiVersion' field that is a non-empty string.");
+        }
+
+        //check to see if the name is specified
+        if( !resource.contains("metadata") || !resource["metadata"].contains("name") || !resource["metadata"]["name"].is_string() || resource["metadata"]["name"].get<string>().empty() ){
+            throw std::runtime_error("The resource must have a 'metadata.name' field that is a non-empty string.");
+        }
+        const string resource_name = resource["metadata"]["name"].get<string>();
+
+
+        // json sent_resource = resource;
+        // sent_resource.erase("kind");
+        // sent_resource.erase("apiVersion");
+        // //sent_resource.erase("metadata");
+        // sent_resource["metadata"].erase("labels");
+        const string resource_string = resource.dump();
+
+
+        const string api_version = resource["apiVersion"].get<string>();
+
+
+
+        std::shared_ptr<genericClient_t> generic_client( 
+                                        genericClient_create(api_client.get(), group.c_str(), version.c_str(), plural.c_str()), 
+                                        genericClient_free 
+                                    );
+
+
+        if( k8s_namespace.empty() ){
+
+
+            //cluster-scoped custom resource
+
+            std::shared_ptr<char> api_response(
+                                                Generic_replaceResource(
+                                                    generic_client.get(),
+                                                    resource_name.c_str(),
+                                                    resource_string.c_str()
+                                                ),
+                                                free
+                                            );
+
+            if( api_response ){
+                cjson cjson_response(api_response.get());
+                if( cjson_response ){
+                    response = cjson_response.toJson();
+                }
+                
+            }
+
+        }else{
+
+            //namespace-scoped custom resource
+
+            std::shared_ptr<char> api_response(
+                                                Generic_replaceNamespacedResource(
+                                                    generic_client.get(), 
+                                                    k8s_namespace.c_str(),
+                                                    resource_name.c_str(),
+                                                    resource_string.c_str()
+                                                ),
+                                                free
+                                            );
+
+            if( api_response ){
+
+                cjson cjson_response(api_response.get());
+                if( cjson_response ){
+                    response = cjson_response.toJson();
+                }
+
+            }
+
+        }
+
+        return response;
+
+    }
+
+
+
+
 
 
     set<string> KubernetesClient::resolveNamespaces( const vector<string>& k8s_namespaces ) const{

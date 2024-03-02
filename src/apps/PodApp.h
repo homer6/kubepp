@@ -90,6 +90,35 @@ namespace kubepp::apps {
 
             }
 
+
+            void replaceSample(){
+
+                KubernetesClient kube_client;
+                
+                json pod_sample = R"({
+                    "apiVersion": "v1",
+                    "kind": "Pod",
+                    "metadata": {
+                        "namespace": "default",
+                        "name": "nginx"
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "name": "nginx",
+                                "image": "nginx:1.15.8"
+                            }
+                        ]
+                    }
+                })"_json;
+
+
+                json response = kube_client.replaceGenericResource( "", "v1", "pods", pod_sample );
+
+                cout << response.dump(4) << endl;
+
+            }
+
     };
 
 }
