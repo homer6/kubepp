@@ -68,6 +68,17 @@ namespace kubepp::apps {
             }
 
 
+            void listSample(){
+
+                KubernetesClient kube_client;
+
+                json response = kube_client.runQuery( "SELECT * FROM stable.example.com/v1:CronTab" );
+
+                cout << response.dump(4) << endl;
+                
+            }
+
+
     };
 
 }

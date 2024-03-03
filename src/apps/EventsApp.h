@@ -10,6 +10,9 @@ using std::endl;
 
 #include "KubernetesClient.h"
 
+#include "json.hpp"
+using json = nlohmann::json;
+
 
 namespace kubepp::apps {
 
@@ -20,7 +23,11 @@ namespace kubepp::apps {
             void run(){
 
                 KubernetesClient kube_client;
-                kube_client.displayEvents();
+
+                json response = kube_client.runQuery( "SELECT * FROM Event" );
+
+                cout << response.dump(4) << endl;
+
                 
             }
 

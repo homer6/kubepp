@@ -43,6 +43,7 @@ int main(int argc, char **argv) {
         CLI::App *crs_app = app.add_subcommand("crs", "Manage custom resources.");
         CLI::App *crs_create_app = crs_app->add_subcommand("create", "Creates a sample CR.");
         CLI::App *crs_delete_app = crs_app->add_subcommand("delete", "Deletes the a sample CR.");
+        CLI::App *crs_list_app = crs_app->add_subcommand("list", "Lists the CRs.");
 
     // Pods command
         CLI::App *pod_app = app.add_subcommand("pods", "Manage pods.");
@@ -113,6 +114,10 @@ int main(int argc, char **argv) {
             }else if( *crs_delete_app ){
 
                 kubepp_app.crs_app.deleteSample();
+
+            }else if( *crs_list_app ){
+
+                kubepp_app.crs_app.listSample();
 
             }
 
