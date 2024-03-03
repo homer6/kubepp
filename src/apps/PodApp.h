@@ -84,17 +84,20 @@ namespace kubepp::apps {
                 KubernetesClient kube_client;
                 //json pods = kube_client.getPods();
 
-                // create a ResourceDescription object for pods in the default namespace
-                const ResourceDescription resource_description = ResourceDescription( R"({
-                    "apiVersion": "v1",
-                    "kind": "Pod",
-                    "metadata": {
-                        "namespace": "default"
-                    }
-                })"_json );
+                // // create a ResourceDescription object for pods in the default namespace
+                // const ResourceDescription resource_description = ResourceDescription( R"({
+                //     "apiVersion": "v1",
+                //     "kind": "Pod",
+                //     "metadata": {
+                //         "namespace": "default"
+                //     }
+                // })"_json );
 
 
-                json response = kube_client.getGenericResources( resource_description );
+                // json response = kube_client.getGenericResources( resource_description );
+
+
+                json response = kube_client.runQuery( "SELECT * FROM Pod" );
 
                 cout << response.dump(4) << endl;
 

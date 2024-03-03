@@ -10,7 +10,7 @@ using json = nlohmann::json;
 namespace kubepp{
 
 
-    const map<string,string> ResourceDescription::kindToApiGroup{
+    const map<string,string> ResourceDescription::kind_to_api_group{
         {"Binding", "v1"},
         {"ComponentStatus", "v1"},
         {"ConfigMap", "v1"},
@@ -104,8 +104,8 @@ namespace kubepp{
         this->api_group = this->api_group_version.substr(0, this->api_group_version.find("/"));
         this->api_version = this->api_group_version.substr(this->api_group_version.find("/")+1);
 
-        if( !ResourceDescription::kindToApiGroup.contains(this->kind) ){
-            const string looked_up_api_group = ResourceDescription::kindToApiGroup.at(this->kind);
+        if( ResourceDescription::kind_to_api_group.count(this->kind) ){
+            const string looked_up_api_group = ResourceDescription::kind_to_api_group.at(this->kind);
             if( looked_up_api_group == "v1" ){
                 // the core api resources have an empty api_group
                 this->api_group = "";
@@ -141,11 +141,11 @@ namespace kubepp{
 
         json resource = json::object();
 
-        if( ResourceDescription::kindToApiGroup.count(resource_str) ){
+        if( ResourceDescription::kind_to_api_group.count(resource_str) ){
 
             //search by Kind only
 
-            const string looked_up_api_group = ResourceDescription::kindToApiGroup.at(resource_str);
+            const string looked_up_api_group = ResourceDescription::kind_to_api_group.at(resource_str);
             
             resource["apiVersion"] = looked_up_api_group;
             resource["kind"] = resource_str;
