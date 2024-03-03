@@ -129,3 +129,6 @@ KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E gdb --args ./build/kubepp logs
 (gdb) run
 ```
 
+## Sponsorship
+
+Kubepp's development is sponsored by https://github.com/homer6/kubify
