@@ -14,6 +14,7 @@ using std::string;
 #include "apps/CustomResourceDefinitionsApp.h"
 #include "apps/CustomResourceApp.h"
 #include "apps/PodApp.h"
+#include "apps/ExportApp.h"
 
 
 
@@ -38,6 +39,7 @@ namespace kubepp {
             apps::CustomResourceDefinitionsApp crds_app;
             apps::CustomResourceApp crs_app;
             apps::PodApp pod_app;
+            apps::ExportApp export_app;
             
     };
 

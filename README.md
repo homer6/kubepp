@@ -10,7 +10,7 @@ This project also contains a CLI application, kubepp, which is an alternative to
 
 
 
-## Example
+## Example (Client)
 
 ```c++
     KubernetesClient kube_client;
@@ -46,6 +46,16 @@ This project also contains a CLI application, kubepp, which is an alternative to
 
         json delete_cr_response = kube_client.deleteResources( cr );
         cout << delete_cr_response.dump(4) << endl;
+```
+
+## Example (CLI)
+
+```bash
+
+    kubepp export resources > all_resources.json
+
+    kubepp export api > all_kinds.json
+
 ```
 
 

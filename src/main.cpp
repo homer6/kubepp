@@ -53,6 +53,11 @@ int main(int argc, char **argv) {
         CLI::App *pod_replace_app = pod_app->add_subcommand("replace", "Replaces the a sample pod.");
         CLI::App *pod_patch_app = pod_app->add_subcommand("patch", "Patches the a sample pod.");
 
+    // Export command
+        CLI::App *export_app = app.add_subcommand("export", "Export resources.");
+        CLI::App *export_resources_app = export_app->add_subcommand("resources", "Export all resources.");
+        CLI::App *export_api_app = export_app->add_subcommand("api", "Export api resources.");
+
 
     // parse the command line arguments
 
@@ -142,6 +147,18 @@ int main(int argc, char **argv) {
             }else if( *pod_patch_app ){
 
                 kubepp_app.pod_app.patchSample();
+
+            }
+
+        // Export command
+
+            else if( *export_resources_app ){
+
+                kubepp_app.export_app.exportAllResources();
+
+            }else if( *export_api_app ){
+
+                kubepp_app.export_app.exportApiResources();
 
             }
 
