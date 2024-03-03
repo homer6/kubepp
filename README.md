@@ -13,6 +13,13 @@ This project also contains a CLI application, kubepp, which is an alternative to
 ## Example (Client)
 
 ```c++
+#include <kubepp/KubernetesClient.h>
+using kubepp::KubernetesClient;
+
+#include <kubepp/json.hpp>
+using json = nlohmann::json;
+
+
 KubernetesClient kube_client;
 
 // get several resource types
