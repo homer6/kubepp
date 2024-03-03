@@ -88,7 +88,7 @@ find_package(kubepp_lib REQUIRED)
 
 
 # link to your binary
-target_link_libraries(kubify PRIVATE kubepp_lib::kubepp_lib)
+target_link_libraries(your-binary PRIVATE kubepp_lib::kubepp_lib)
 ```
 
 
