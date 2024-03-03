@@ -13,48 +13,48 @@ This project also contains a CLI application, kubepp, which is an alternative to
 ## Example (Client)
 
 ```c++
-    KubernetesClient kube_client;
+KubernetesClient kube_client;
 
-    // get several resource types
-        json workloads = kube_client.runQuery( "SELECT * FROM Pod, Deployment, stable.example.com/v1:CronTab" );
-        cout << workloads.dump(4) << endl;
-
-
-    // get all resources
-        json all_resources = kube_client.runQuery( "SELECT * FROM *" );
-        cout << all_resources.dump(4) << endl;
+// get several resource types
+    json workloads = kube_client.runQuery( "SELECT * FROM Pod, Deployment, stable.example.com/v1:CronTab" );
+    cout << workloads.dump(4) << endl;
 
 
-    // create, then delete a CustomResource
-        json cr = R"({
-            "apiVersion": "stable.example.com/v1",
-            "kind": "CronTab",
-            "metadata": {
-                "name": "my-crontab",
-                "namespace": "default"
-            },
-            "spec": {
-                "cronSpec": "*/5 * * * *",
-                "image": "my-cron-image:latest",
-                "replicas": 3
-            }
-        })"_json;
+// get all resources
+    json all_resources = kube_client.runQuery( "SELECT * FROM *" );
+    cout << all_resources.dump(4) << endl;
 
-        // supports one or many resources
-        json cr_response = kube_client.createResources( cr );
-        cout << cr_response.dump(4) << endl;
 
-        json delete_cr_response = kube_client.deleteResources( cr );
-        cout << delete_cr_response.dump(4) << endl;
+// create, then delete a CustomResource
+    json cr = R"({
+        "apiVersion": "stable.example.com/v1",
+        "kind": "CronTab",
+        "metadata": {
+            "name": "my-crontab",
+            "namespace": "default"
+        },
+        "spec": {
+            "cronSpec": "*/5 * * * *",
+            "image": "my-cron-image:latest",
+            "replicas": 3
+        }
+    })"_json;
+
+    // supports one or many resources
+    json cr_response = kube_client.createResources( cr );
+    cout << cr_response.dump(4) << endl;
+
+    json delete_cr_response = kube_client.deleteResources( cr );
+    cout << delete_cr_response.dump(4) << endl;
 ```
 
 ## Example (CLI)
 
 ```bash
 
-    kubepp export resources > all_resources.json
+kubepp export resources > all_resources.json
 
-    kubepp export api > all_kinds.json
+kubepp export api > all_kinds.json
 
 ```
 
