@@ -681,18 +681,41 @@ namespace kubepp{
         json results = json::array();
 
         for( const string& from : query.from ){
-            
-            json these_results = this->getGenericResources( from );
 
-            ResourceDescription resource_description(from);
+            if( from == "*" ){
 
-            if( these_results.contains("items") && these_results["items"].is_array() ){
-                for( json result : these_results["items"] ){
-                    result["apiVersion"] = resource_description.api_group_version;
-                    result["kind"] = resource_description.kind;
-                    results.push_back(result);
+                for( const auto& pair : ResourceDescription::kind_to_api_group ){
+ 
+                    json these_results = this->getGenericResources( pair.first );
+
+                    ResourceDescription resource_description( pair.first );
+
+                    if( these_results.contains("items") && these_results["items"].is_array() ){
+                        for( json result : these_results["items"] ){
+                            result["apiVersion"] = resource_description.api_group_version;
+                            result["kind"] = resource_description.kind;
+                            results.push_back(result);
+                        }
+                    }
+
                 }
+
+            }else{
+
+                json these_results = this->getGenericResources( from );
+
+                ResourceDescription resource_description(from);
+
+                if( these_results.contains("items") && these_results["items"].is_array() ){
+                    for( json result : these_results["items"] ){
+                        result["apiVersion"] = resource_description.api_group_version;
+                        result["kind"] = resource_description.kind;
+                        results.push_back(result);
+                    }
+                }
+
             }
+            
 
         }
 

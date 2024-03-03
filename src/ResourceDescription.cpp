@@ -62,7 +62,6 @@ namespace kubepp{
         {"RoleBinding", "rbac.authorization.k8s.io/v1"},
         {"Role", "rbac.authorization.k8s.io/v1"},
         {"PriorityClass", "scheduling.k8s.io/v1"},
-        {"CronTab", "stable.example.com/v1"},
         {"CSIDriver", "storage.k8s.io/v1"},
         {"CSINode", "storage.k8s.io/v1"},
         {"CSIStorageCapacity", "storage.k8s.io/v1"},

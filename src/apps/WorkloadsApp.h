@@ -19,8 +19,13 @@ namespace kubepp::apps {
 
             void run(){
 
+                // KubernetesClient kube_client;
+                // json workloads = kube_client.runQuery( "SELECT * FROM Pod, Deployment, stable.example.com/v1:CronTab" );
+                // cout << workloads.dump(4) << endl;
+
+
                 KubernetesClient kube_client;
-                json workloads = kube_client.runQuery( "SELECT * FROM Pod, Deployment, stable.example.com/v1:CronTab" );
+                json workloads = kube_client.runQuery( "SELECT * FROM *" );
                 cout << workloads.dump(4) << endl;
                 
             }

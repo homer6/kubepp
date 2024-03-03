@@ -34,11 +34,13 @@ namespace kubepp{
             string name;
 
 
+            static const map<string, string> kind_to_api_group;
+
         private:
             
             string toLower( const string& str ) const;
            
-            static const map<string, string> kind_to_api_group;
+            
 
 
     };

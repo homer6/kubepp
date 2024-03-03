@@ -47,8 +47,11 @@ namespace kubepp{
             json deleteGenericResource( const ResourceDescription& resource_description, const json& resource ) const;
             json getGenericResource( const ResourceDescription& resource_description ) const;
             json getGenericResources( const ResourceDescription& resource_description ) const;
+
             //doesn't work yet; needs this fix applied in the c client:
             json replaceGenericResource( const ResourceDescription& resource_description, const json& resource ) const;
+
+            //works
             json patchGenericResource( const ResourceDescription& resource_description, const json& patch ) const;
 
 
