@@ -20,16 +20,16 @@ namespace kubepp::apps {
             void exportAllResources(){
 
                 KubernetesClient kube_client;
-                json workloads = kube_client.runQuery( "SELECT * FROM *" );
-                cout << workloads.dump(4) << endl;
+                json all_resources = kube_client.runQuery( "SELECT * FROM *" );
+                cout << all_resources.dump(4) << endl;
 
             }
 
             void exportApiResources(){
 
                 KubernetesClient kube_client;
-                json workloads = kube_client.getApiResources();
-                cout << workloads.dump(4) << endl;
+                json all_kinds = kube_client.getApiResources();
+                cout << all_kinds.dump(4) << endl;
 
             }
 
