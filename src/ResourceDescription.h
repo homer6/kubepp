@@ -20,6 +20,7 @@ namespace kubepp{
     class ResourceDescription{
 
         public:
+            ResourceDescription();
             ResourceDescription( const json& resource );
             ResourceDescription( const string& resource_str );
 

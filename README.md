@@ -75,7 +75,8 @@ KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E ./build/kubepp logs
 
 KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E ./build/kubepp --help
 
-KUBECONFIG="/etc/rancher/k3s/k3s.yaml" kubectl api-resources
+KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E kubectl api-resources
+KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E kubectl api-versions
 ```
 
 

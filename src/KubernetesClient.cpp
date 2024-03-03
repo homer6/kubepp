@@ -23,6 +23,9 @@ using std::cout;
 using std::endl;
 using std::cerr;
 
+#include <tuple>
+using std::tuple;
+
 
 #include "json.hpp"
 
@@ -656,7 +659,101 @@ namespace kubepp{
     }
     
 
-   
+    
+
+    json KubernetesClient::getApiResources() const{
+
+
+        ResourceDescription resource_description;
+
+        json results = json::array();
+
+
+        vector<tuple<string, string, string>> apis = {
+            {"v1", "", "v1"},
+            {"v1", "admissionregistration.k8s.io", "admissionregistration.k8s.io/v1"},
+            {"v1", "apiextensions.k8s.io", "apiextensions.k8s.io/v1"},
+            {"v1", "apiregistration.k8s.io", "apiregistration.k8s.io/v1"},
+            {"v1", "apps", "apps/v1"},
+            {"v1", "authentication.k8s.io", "authentication.k8s.io/v1"},
+            {"v1", "authorization.k8s.io", "authorization.k8s.io/v1"},
+            {"v1", "autoscaling", "autoscaling/v1"},
+            {"v2", "autoscaling", "autoscaling/v2"},
+            {"v1", "batch", "batch/v1"},
+            {"v1", "certificates.k8s.io", "certificates.k8s.io/v1"},
+            {"v1", "coordination.k8s.io", "coordination.k8s.io/v1"},
+            {"v1", "discovery.k8s.io", "discovery.k8s.io/v1"},
+            {"v1", "events.k8s.io", "events.k8s.io/v1"},
+            {"v1beta2", "flowcontrol.apiserver.k8s.io", "flowcontrol.apiserver.k8s.io/v1beta2"},
+            {"v1beta3", "flowcontrol.apiserver.k8s.io", "flowcontrol.apiserver.k8s.io/v1beta3"},
+            {"v1", "networking.k8s.io", "networking.k8s.io/v1"},
+            {"v1", "node.k8s.io", "node.k8s.io/v1"},
+            {"v1", "policy", "policy/v1"},
+            {"v1", "rbac.authorization.k8s.io", "rbac.authorization.k8s.io/v1"},
+            {"v1", "scheduling.k8s.io", "scheduling.k8s.io/v1"},
+            {"v1", "storage.k8s.io", "storage.k8s.io/v1"}
+        };
+
+
+
+        // add all of the CRDs APIs
+            json crds = this->runQuery("SELECT * FROM CustomResourceDefinition");
+
+            //cout << crds;
+
+            //return crds;
+
+            for( json crd : crds ){
+
+                string group = crd["spec"]["group"].get<string>();
+
+                for( const auto& version : crd["spec"]["versions"] ){
+                    string version_str = version["name"].get<string>();
+                    string api_group_version = group + "/" + version_str;
+
+                    bool add = true;
+                    for( const auto& api : apis ){
+                        if( std::get<0>(api) == version_str && std::get<1>(api) == group && std::get<2>(api) == api_group_version ){
+                            add = false;
+                        }
+                    }
+
+                    if( add ){
+                        apis.push_back({version_str, group, api_group_version});
+                    }
+
+                }
+
+            }
+
+
+        // pull the resources from the apis
+            for( const auto& api : apis ){
+
+                resource_description.api_version = std::get<0>(api);
+                resource_description.api_group = std::get<1>(api);            
+                resource_description.api_group_version = std::get<2>(api);
+
+                //cout << "api_version=" << resource_description.api_version << " api_group=" << resource_description.api_group << " api_group_version=" << resource_description.api_group_version << endl;
+                
+                json these_results = this->getGenericResources(resource_description);
+
+                if( these_results.contains("resources") && these_results["resources"].is_array() ){
+
+                    for( json result : these_results["resources"] ){
+                        result["apiVersion"] = resource_description.api_group_version;
+                        results.push_back(result);
+                    }
+
+                }
+
+            }
+
+        return results;
+
+    }
+
+
 
     std::shared_ptr<genericClient_t> KubernetesClient::createGenericClient( const ResourceDescription& resource_description ) const{
 
@@ -684,6 +781,22 @@ namespace kubepp{
 
             if( from == "*" ){
 
+                json api_resources = this->getApiResources();  //lots of requests
+
+                for( json api_resource : api_resources ){
+                    ResourceDescription resource_description(api_resource);
+                    json these_results = this->getGenericResources(resource_description);
+                    if( these_results.contains("items") && these_results["items"].is_array() ){
+                        for( json result : these_results["items"] ){
+                            result["apiVersion"] = resource_description.api_group_version;
+                            result["kind"] = resource_description.kind;
+                            results.push_back(result);
+                        }
+                    }
+                }
+
+                /*
+
                 for( const auto& pair : ResourceDescription::kind_to_api_group ){
  
                     json these_results = this->getGenericResources( pair.first );
@@ -699,6 +812,7 @@ namespace kubepp{
                     }
 
                 }
+                */
 
             }else{
 

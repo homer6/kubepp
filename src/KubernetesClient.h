@@ -63,6 +63,7 @@ namespace kubepp{
             set<string> resolveNamespaces( const vector<string>& k8s_namespaces = { "all" } ) const;
 
 
+            json getApiResources() const;
 
 
         protected:

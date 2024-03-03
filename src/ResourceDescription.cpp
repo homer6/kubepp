@@ -71,6 +71,18 @@ namespace kubepp{
 
 
 
+    ResourceDescription::ResourceDescription(){
+
+        this->api_group = "";
+        this->api_version = "v1";
+        this->api_group_version = "v1";
+        this->kind = "";
+        this->kind_lower_plural = "";
+        this->k8s_namespace = "";
+        this->name = "";
+
+    }
+
 
 
     ResourceDescription::ResourceDescription( const json& resource ){
@@ -98,7 +110,13 @@ namespace kubepp{
             throw std::runtime_error("The resource must have a 'kind' field that is a non-empty string.");
         }
         this->kind = resource["kind"].get<string>();
-        this->kind_lower_plural = this->toLower(kind) + "s";
+
+        if( resource.contains("name") && resource["name"].is_string() && !resource["name"].get<string>().empty() ){
+            this->name = resource["name"].get<string>();
+            this->kind_lower_plural = this->name;
+        }else{
+            this->kind_lower_plural = this->toLower(kind) + "s";
+        }        
  
         this->api_group = this->api_group_version.substr(0, this->api_group_version.find("/"));
         this->api_version = this->api_group_version.substr(this->api_group_version.find("/")+1);
