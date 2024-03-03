@@ -1733,5 +1733,26 @@ std::string to_utf8(std::wstring& wide_string)
     }
 
 
+
+    json KubernetesClient::runQuery( const Query& query ) const{
+
+        json results = json::array();
+
+        for( const string& from : query.from ){
+            
+            json these_results = this->getGenericResources( from );
+
+            results.push_back(these_results);
+
+        }
+
+        return results;
+
+    }
+
+
+
+
+
 }
 

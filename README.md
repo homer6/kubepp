@@ -31,6 +31,9 @@ KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E ./build/kubepp logs
 ./build/kubepp events watch
 
 ./build/kubepp events --help
+
+
+KUBECONFIG="/etc/rancher/k3s/k3s.yaml" kubectl api-resources
 ```
 
 

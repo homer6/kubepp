@@ -21,6 +21,7 @@ using json = nlohmann::json;
 
 
 #include "ResourceDescription.h"
+#include "Query.h"
 
 
 namespace kubepp{
@@ -32,47 +33,14 @@ namespace kubepp{
             KubernetesClient( const string& base_path_str = "https://10.0.0.157:6443" );
             ~KubernetesClient();
 
-            void displayWorkloads() const;
-            void displayEvents() const;
-            void displayLogs() const;
-            void displayNodes() const;
-            
-            json getPods( const vector<string>& k8s_namespaces = { "all" } ) const;
-            json getDeployments( const vector<string>& k8s_namespaces = { "all" } ) const;
-            json getEvents( const vector<string>& k8s_namespaces = { "all" } ) const;
-            json getNodes() const;
-
-
-
             /* Creates many resources or one resource. Accepts and array or an object. Returns the json responses.*/
             json createResources( const json& resources ) const;
-            
-            /* Creates a single resource. Accepts an object. Returns the json response.*/
-            json createResource( const json& resource ) const;
-            
 
             /* Deletes many resources or one resource. Accepts and array or an object. Returns the json responses.*/
             json deleteResources( const json& resources ) const;
 
-            /* Deletes a single resource. Accepts an object. Returns the json response.*/
-            json deleteResource( const json& resource ) const;
 
-
-            
-            /* Prefer using the createResources method instead, which will detect the type of resources automatically. */
-            json getCustomResourceDefinition( const string& name ) const;
-            json createCustomResourceDefinition( const json& custom_resource_definition ) const;
-            json deleteCustomResourceDefinition( const json& custom_resource_definition ) const;
-            json getCustomResourceDefinitions() const;
-
-            //this works for both namespaced-scoped and cluster-scoped custom resources
-            //resource without a namespace are treated as cluster-scoped
-            json createCustomResource( const json& custom_resource ) const;
-            json deleteCustomResource( const json& custom_resource ) const;
-
-            json createPod( const json& pod ) const;
-            json deletePod( const json& pod ) const;
-
+            json runQuery( const Query& query ) const;
 
 
             json createGenericResource( const ResourceDescription& resource_description, const json& resource ) const;
@@ -92,11 +60,51 @@ namespace kubepp{
             set<string> resolveNamespaces( const vector<string>& k8s_namespaces = { "all" } ) const;
 
 
-            std::shared_ptr<genericClient_t> createGenericClient( const ResourceDescription& resource_description ) const;
+
+
+
+
+            //deprecated
+
+            void displayWorkloads() const;
+            void displayEvents() const;
+            void displayLogs() const;
+            void displayNodes() const;
+            
+            json getPods( const vector<string>& k8s_namespaces = { "all" } ) const;
+            json getDeployments( const vector<string>& k8s_namespaces = { "all" } ) const;
+            json getEvents( const vector<string>& k8s_namespaces = { "all" } ) const;
+            json getNodes() const;
+
+
+            
+            // /* Prefer using the createResources method instead, which will detect the type of resources automatically. */
+            json getCustomResourceDefinition( const string& name ) const;
+            json createCustomResourceDefinition( const json& custom_resource_definition ) const;
+            json deleteCustomResourceDefinition( const json& custom_resource_definition ) const;
+            json getCustomResourceDefinitions() const;
+
+            //this works for both namespaced-scoped and cluster-scoped custom resources
+            //resource without a namespace are treated as cluster-scoped
+            json createCustomResource( const json& custom_resource ) const;
+            json deleteCustomResource( const json& custom_resource ) const;
+
+            json createPod( const json& pod ) const;
+            json deletePod( const json& pod ) const;
 
 
 
         protected:
+
+            /* Creates a single resource. Accepts an object. Returns the json response. Prefer using createResources instead of this method.*/
+            json createResource( const json& resource ) const;
+
+            /* Deletes a single resource. Accepts an object. Returns the json response. Prefer using deleteResources instead of this method.*/
+            json deleteResource( const json& resource ) const;
+            
+            std::shared_ptr<genericClient_t> createGenericClient( const ResourceDescription& resource_description ) const;
+
+
             std::shared_ptr<apiClient_t> api_client;
             char* detected_base_path = NULL;
             string base_path;
@@ -104,6 +112,13 @@ namespace kubepp{
             //todo: move to smart pointers
             sslConfig_t *sslConfig = nullptr;
             list_t *apiKeys = nullptr;
+
+
+
+
+
+
+
 
     };
 

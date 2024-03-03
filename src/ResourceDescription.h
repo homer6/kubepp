@@ -6,6 +6,10 @@ using std::set;
 #include <string>
 using std::string;
 
+#include <map>
+using std::map;
+
+
 #include "json_fwd.hpp"
 using json = nlohmann::json;
 
@@ -17,6 +21,9 @@ namespace kubepp{
 
         public:
             ResourceDescription( const json& resource );
+            ResourceDescription( const string& resource_str );
+
+            void fromJson( const json& resource );
 
             string api_group;
             string api_version;
@@ -30,10 +37,8 @@ namespace kubepp{
         private:
             
             string toLower( const string& str ) const;
-
-
-            // make a single instance of core_resources in static memory
-            static const std::set<string> core_resources;
+           
+            static const map<string, string> kindToApiGroup;
 
 
     };

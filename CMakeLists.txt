@@ -18,6 +18,7 @@ set(SOURCES
     src/KubeppApp.cpp
     src/KubernetesClient.cpp
     src/ResourceDescription.cpp
+    src/Query.cpp
     src/cjson.cpp
 )
 

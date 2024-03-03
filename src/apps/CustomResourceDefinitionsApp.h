@@ -95,7 +95,7 @@ namespace kubepp::apps {
             void displayCustomResourceDefinitions(){
 
                 KubernetesClient kube_client;
-                json crds = kube_client.getCustomResourceDefinitions();
+                json crds = kube_client.runQuery( "SELECT * FROM CustomResourceDefinition" );
                 cout << crds.dump(4) << endl;
 
             }
