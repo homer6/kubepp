@@ -41,3 +41,6 @@ build/
 /cmake_install.cmake
 /install_manifest.txt
 /kubepp
+
+/kubepp_libConfig.cmake
+/kubepp_libConfigVersion.cmake

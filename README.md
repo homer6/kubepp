@@ -75,6 +75,23 @@ make -j4
 sudo make install
 ```
 
+## Including with cmake
+
+```cmake
+include_directories(
+    "/usr/local/include/kubernetes/include"
+    "/usr/local/include/kubernetes/config"
+    "/usr/local/include/kubernetes/api"
+)
+
+find_package(kubepp_lib REQUIRED)
+
+
+# link to your binary
+target_link_libraries(kubify PRIVATE kubepp_lib::kubepp_lib)
+```
+
+
 ## Running Tests
 
 ```bash
