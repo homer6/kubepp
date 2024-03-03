@@ -20,7 +20,8 @@ namespace kubepp::apps {
             void run(){
 
                 KubernetesClient kube_client;
-                kube_client.displayLogs();
+                auto logs = kube_client.getPodLogs( "kube-system", "svclb-traefik-06f20d2a-684jx", "lb-tcp-80" );
+                cout << logs.dump(4) << endl;
                 
             }
 

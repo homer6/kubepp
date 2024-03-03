@@ -20,7 +20,8 @@ namespace kubepp::apps {
             void run(){
 
                 KubernetesClient kube_client;
-                kube_client.displayWorkloads();
+                json workloads = kube_client.runQuery( "SELECT * FROM Pod, Deployment" );
+                cout << workloads.dump(4) << endl;
                 
             }
 

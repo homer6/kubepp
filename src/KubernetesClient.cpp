@@ -64,41 +64,43 @@ namespace kubepp{
 
     }
 
-    void KubernetesClient::displayWorkloads() const{
-
-        spdlog::info( "Listing pods:" );
-        cout << this->getPods().dump(4) << endl;
-
-        spdlog::info( "Listing deployments:" );
-        cout << this->getDeployments().dump(4) << endl;
-
-    }
-
-    void KubernetesClient::displayEvents() const{
-
-        spdlog::info( "Listing events:" );
-        cout << this->getEvents().dump(4) << endl;
-
-    }
 
 
-    void KubernetesClient::displayLogs() const{
+    // void KubernetesClient::displayWorkloads() const{
 
-        spdlog::info( "Listing logs:" );
+    //     spdlog::info( "Listing pods:" );
+    //     cout << this->getPods().dump(4) << endl;
 
-        auto logs = this->getPodLogs( "kube-system", "svclb-traefik-06f20d2a-684jx", "lb-tcp-80" );
+    //     spdlog::info( "Listing deployments:" );
+    //     cout << this->getDeployments().dump(4) << endl;
 
-        cout << logs.dump(4) << endl;
+    // }
 
-    }
+    // void KubernetesClient::displayEvents() const{
+
+    //     spdlog::info( "Listing events:" );
+    //     cout << this->getEvents().dump(4) << endl;
+
+    // }
 
 
-    void KubernetesClient::displayNodes() const{
+    // void KubernetesClient::displayLogs() const{
 
-        spdlog::info( "Listing nodes:" );
-        cout << this->getNodes().dump(4) << endl;
+    //     spdlog::info( "Listing logs:" );
 
-    }
+    //     auto logs = this->getPodLogs( "kube-system", "svclb-traefik-06f20d2a-684jx", "lb-tcp-80" );
+
+    //     cout << logs.dump(4) << endl;
+
+    // }
+
+
+    // void KubernetesClient::displayNodes() const{
+
+    //     spdlog::info( "Listing nodes:" );
+    //     cout << this->getNodes().dump(4) << endl;
+
+    // }
 
 
     vector<string> KubernetesClient::getNamespaceNames() const{
@@ -142,286 +144,278 @@ namespace kubepp{
 
     }
 
-#include <codecvt> // codecvt_utf8
-#include <locale>  // wstring_convert
-
-// encoding function
-std::string to_utf8(std::wstring& wide_string)
-{
-    static std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
-    return utf8_conv.to_bytes(wide_string);
-}
 
 
-    json KubernetesClient::getPods( const vector<string>& k8s_namespaces ) const{
 
-        auto namespaces = this->resolveNamespaces(k8s_namespaces);
+    // json KubernetesClient::getPods( const vector<string>& k8s_namespaces ) const{
 
-        json pods = json::array();
+    //     auto namespaces = this->resolveNamespaces(k8s_namespaces);
 
-        for( const string& k8s_namespace : namespaces ){
+    //     json pods = json::array();
 
-            // std::shared_ptr<v1_pod_list_t> pod_list( 
-            //                                         CoreV1API_listNamespacedPod(
-            //                                             const_cast<apiClient_t*>(api_client.get()), 
-            //                                             const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-            //                                             NULL,    /* pretty */
-            //                                             NULL,    /* allowWatchBookmarks */
-            //                                             NULL,    /* continue */
-            //                                             NULL,    /* fieldSelector */
-            //                                             NULL,    /* labelSelector */
-            //                                             NULL,    /* limit */
-            //                                             NULL,    /* resourceVersion */
-            //                                             NULL,    /* resourceVersionMatch */
-            //                                             NULL,    /* sendInitialEvents */
-            //                                             NULL,    /* timeoutSeconds */
-            //                                             NULL     /* watch */
-            //                                         ),
-            //                                         v1_pod_list_free
-            //                                     );
+    //     for( const string& k8s_namespace : namespaces ){
 
-
-            char *response = (char*)CoreV1API_listNamespacedPod(
-                const_cast<apiClient_t*>(api_client.get()), 
-                const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-                NULL,    /* pretty */
-                NULL,    /* allowWatchBookmarks */
-                NULL,    /* continue */
-                NULL,    /* fieldSelector */
-                NULL,    /* labelSelector */
-                NULL,    /* limit */
-                NULL,    /* resourceVersion */
-                NULL,    /* resourceVersionMatch */
-                NULL,    /* sendInitialEvents */
-                NULL,    /* timeoutSeconds */
-                NULL     /* watch */
-            );
-
-            // std::shared_ptr<char> pod_list( 
-            //                                         (char*)CoreV1API_listNamespacedPod(
-            //                                             const_cast<apiClient_t*>(api_client.get()), 
-            //                                             const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-            //                                             NULL,    /* pretty */
-            //                                             NULL,    /* allowWatchBookmarks */
-            //                                             NULL,    /* continue */
-            //                                             NULL,    /* fieldSelector */
-            //                                             NULL,    /* labelSelector */
-            //                                             NULL,    /* limit */
-            //                                             NULL,    /* resourceVersion */
-            //                                             NULL,    /* resourceVersionMatch */
-            //                                             NULL,    /* sendInitialEvents */
-            //                                             NULL,    /* timeoutSeconds */
-            //                                             NULL     /* watch */
-            //                                         ),
-            //                                         free
-            //                                     );
+    //         // std::shared_ptr<v1_pod_list_t> pod_list( 
+    //         //                                         CoreV1API_listNamespacedPod(
+    //         //                                             const_cast<apiClient_t*>(api_client.get()), 
+    //         //                                             const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+    //         //                                             NULL,    /* pretty */
+    //         //                                             NULL,    /* allowWatchBookmarks */
+    //         //                                             NULL,    /* continue */
+    //         //                                             NULL,    /* fieldSelector */
+    //         //                                             NULL,    /* labelSelector */
+    //         //                                             NULL,    /* limit */
+    //         //                                             NULL,    /* resourceVersion */
+    //         //                                             NULL,    /* resourceVersionMatch */
+    //         //                                             NULL,    /* sendInitialEvents */
+    //         //                                             NULL,    /* timeoutSeconds */
+    //         //                                             NULL     /* watch */
+    //         //                                         ),
+    //         //                                         v1_pod_list_free
+    //         //                                     );
 
 
-            //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
+    //         char *response = (char*)CoreV1API_listNamespacedPod(
+    //             const_cast<apiClient_t*>(api_client.get()), 
+    //             const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+    //             NULL,    /* pretty */
+    //             NULL,    /* allowWatchBookmarks */
+    //             NULL,    /* continue */
+    //             NULL,    /* fieldSelector */
+    //             NULL,    /* labelSelector */
+    //             NULL,    /* limit */
+    //             NULL,    /* resourceVersion */
+    //             NULL,    /* resourceVersionMatch */
+    //             NULL,    /* sendInitialEvents */
+    //             NULL,    /* timeoutSeconds */
+    //             NULL     /* watch */
+    //         );
 
-            if( response ){
+    //         // std::shared_ptr<char> pod_list( 
+    //         //                                         (char*)CoreV1API_listNamespacedPod(
+    //         //                                             const_cast<apiClient_t*>(api_client.get()), 
+    //         //                                             const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+    //         //                                             NULL,    /* pretty */
+    //         //                                             NULL,    /* allowWatchBookmarks */
+    //         //                                             NULL,    /* continue */
+    //         //                                             NULL,    /* fieldSelector */
+    //         //                                             NULL,    /* labelSelector */
+    //         //                                             NULL,    /* limit */
+    //         //                                             NULL,    /* resourceVersion */
+    //         //                                             NULL,    /* resourceVersionMatch */
+    //         //                                             NULL,    /* sendInitialEvents */
+    //         //                                             NULL,    /* timeoutSeconds */
+    //         //                                             NULL     /* watch */
+    //         //                                         ),
+    //         //                                         free
+    //         //                                     );
 
-                //fmt::print("Get pod list for namespace '{}':\n", k8s_namespace);
+
+    //         //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
+
+    //         if( response ){
+
+    //             //fmt::print("Get pod list for namespace '{}':\n", k8s_namespace);
 
                 
-                //std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-                //std::string my_string = converter.to_bytes( (wchar_t*) pod_list.get() );
+    //             //std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    //             //std::string my_string = converter.to_bytes( (wchar_t*) pod_list.get() );
 
-                //string my_string( cjson(pod_list.get()) );
-
-
-                //output the string as hexidecimal
-                // for( char c : my_string ){
-
-                //     cout << std::hex << (int)c << " ";
-
-                // }
-
-                //return json::object();
+    //             //string my_string( cjson(pod_list.get()) );
 
 
-                //json pod_list_json = json::parse(my_string);
+    //             //output the string as hexidecimal
+    //             // for( char c : my_string ){
 
-                json pod_list_json = cjson( response ).toJson();
-    //            cout << pod_list_json.dump(4) << endl;
+    //             //     cout << std::hex << (int)c << " ";
+
+    //             // }
+
+    //             //return json::object();
 
 
-                if( pod_list_json.contains("items") && pod_list_json["items"].is_array() ){
-                    for( json pod_json : pod_list_json["items"] ){
-                        pod_json["apiVersion"] = "v1";
-                        pod_json["kind"] = "Pod";
-                        pods.push_back(pod_json);
-                    }
-                }
+    //             //json pod_list_json = json::parse(my_string);
 
-                /*
-                listEntry_t *listEntry = NULL;
-                v1_pod_t *pod = NULL;
+    //             json pod_list_json = cjson( response ).toJson();
+    // //            cout << pod_list_json.dump(4) << endl;
 
-                //iterate through the list of pods
 
-                list_ForEach(listEntry, pod_list->items) {
+    //             if( pod_list_json.contains("items") && pod_list_json["items"].is_array() ){
+    //                 for( json pod_json : pod_list_json["items"] ){
+    //                     pod_json["apiVersion"] = "v1";
+    //                     pod_json["kind"] = "Pod";
+    //                     pods.push_back(pod_json);
+    //                 }
+    //             }
 
-                    pod = (v1_pod_t *)listEntry->data;
+    //             /*
+    //             listEntry_t *listEntry = NULL;
+    //             v1_pod_t *pod = NULL;
 
-                    //json pod_json = json::object();
+    //             //iterate through the list of pods
 
-                    json pod_json = cjson( v1_pod_convertToJSON(pod) ).toJson();
+    //             list_ForEach(listEntry, pod_list->items) {
 
-                    //pod_json["apiVersion"] = "v1";
-                    //pod_json["kind"] = "Pod";
-                    //pod_json["metadata"] = cjson( v1_object_meta_convertToJSON(pod->metadata) ).toJson();
-                    //pod_json["spec"] = cjson( v1_pod_spec_convertToJSON(pod->spec) ).toJson();
+    //                 pod = (v1_pod_t *)listEntry->data;
 
-                    //pod_json["status"] = cjson( v1_pod_status_convertToJSON(pod->status) ).toJson();
+    //                 //json pod_json = json::object();
 
-                    pods.push_back(pod_json);
+    //                 json pod_json = cjson( v1_pod_convertToJSON(pod) ).toJson();
 
-                }
+    //                 //pod_json["apiVersion"] = "v1";
+    //                 //pod_json["kind"] = "Pod";
+    //                 //pod_json["metadata"] = cjson( v1_object_meta_convertToJSON(pod->metadata) ).toJson();
+    //                 //pod_json["spec"] = cjson( v1_pod_spec_convertToJSON(pod->spec) ).toJson();
+
+    //                 //pod_json["status"] = cjson( v1_pod_status_convertToJSON(pod->status) ).toJson();
+
+    //                 pods.push_back(pod_json);
+
+    //             }
                 
-                */
-            }else{
+    //             */
+    //         }else{
 
-                fmt::print("Cannot get any pod.\n");
+    //             fmt::print("Cannot get any pod.\n");
 
-            }
+    //         }
 
-        }
+    //     }
 
-        return pods;
-
-
-    }
+    //     return pods;
 
 
+    // }
 
 
 
-    json KubernetesClient::getDeployments( const vector<string>& k8s_namespaces ) const{
-
-        auto namespaces = this->resolveNamespaces(k8s_namespaces);
-
-        json deployments = json::array();
-
-        for( const string& k8s_namespace : namespaces ){
-
-            std::shared_ptr<v1_deployment_list_t> deployment_list( 
-                                                    AppsV1API_listNamespacedDeployment(
-                                                        const_cast<apiClient_t*>(api_client.get()), 
-                                                        const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-                                                        NULL,    /* pretty */
-                                                        NULL,    /* allowWatchBookmarks */
-                                                        NULL,    /* continue */
-                                                        NULL,    /* fieldSelector */
-                                                        NULL,    /* labelSelector */
-                                                        NULL,    /* limit */
-                                                        NULL,    /* resourceVersion */
-                                                        NULL,    /* resourceVersionMatch */
-                                                        NULL,    /* sendInitialEvents */
-                                                        NULL,    /* timeoutSeconds */
-                                                        NULL     /* watch */
-                                                    ),
-                                                    v1_deployment_list_free
-                                                );
-
-            //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
-
-            if( deployment_list ){
-
-                //fmt::print("Get deployment list for namespace '{}':\n", k8s_namespace);
-
-                listEntry_t *listEntry = NULL;
-                v1_deployment_t *deployment = NULL;
-
-                list_ForEach(listEntry, deployment_list->items) {
-
-                    deployment = (v1_deployment_t *)listEntry->data;
-
-                    json deployment_json = cjson( v1_deployment_convertToJSON(deployment) ).toJson();
-
-                    deployment_json["apiVersion"] = "apps/v1";
-                    deployment_json["kind"] = "Deployment";
-
-                    //deployment_json["metadata"] = cjson( v1_object_meta_convertToJSON(deployment->metadata) ).toJson();
-                    //deployment_json["spec"] = cjson( v1_deployment_spec_convertToJSON(deployment->spec) ).toJson();
-                    //deployment_json["status"] = cjson( v1_deployment_status_convertToJSON(deployment->status) ).toJson();
-
-                    deployments.push_back(deployment_json);
-
-                }
-
-            }else{
-
-                fmt::print("Cannot get any deployment.\n");
-
-            }
-
-        }
-
-        return deployments;
-
-    }
 
 
-    json KubernetesClient::getEvents( const vector<string>& k8s_namespaces ) const{
+    // json KubernetesClient::getDeployments( const vector<string>& k8s_namespaces ) const{
 
-        auto namespaces = this->resolveNamespaces(k8s_namespaces);
+    //     auto namespaces = this->resolveNamespaces(k8s_namespaces);
 
-        json events = json::array();
+    //     json deployments = json::array();
 
-        for( const string& k8s_namespace : namespaces ){
+    //     for( const string& k8s_namespace : namespaces ){
 
-            std::shared_ptr<core_v1_event_list_t> event_list( 
-                                                    CoreV1API_listNamespacedEvent(
-                                                        const_cast<apiClient_t*>(api_client.get()), 
-                                                        const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
-                                                        NULL,    /* pretty */
-                                                        NULL,    /* allowWatchBookmarks */
-                                                        NULL,    /* continue */
-                                                        NULL,    /* fieldSelector */
-                                                        NULL,    /* labelSelector */
-                                                        NULL,    /* limit */
-                                                        NULL,    /* resourceVersion */
-                                                        NULL,    /* resourceVersionMatch */
-                                                        NULL,    /* sendInitialEvents */
-                                                        NULL,    /* timeoutSeconds */
-                                                        NULL     /* watch */
-                                                    ),
-                                                    core_v1_event_list_free
-                                                );
+    //         std::shared_ptr<v1_deployment_list_t> deployment_list( 
+    //                                                 AppsV1API_listNamespacedDeployment(
+    //                                                     const_cast<apiClient_t*>(api_client.get()), 
+    //                                                     const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+    //                                                     NULL,    /* pretty */
+    //                                                     NULL,    /* allowWatchBookmarks */
+    //                                                     NULL,    /* continue */
+    //                                                     NULL,    /* fieldSelector */
+    //                                                     NULL,    /* labelSelector */
+    //                                                     NULL,    /* limit */
+    //                                                     NULL,    /* resourceVersion */
+    //                                                     NULL,    /* resourceVersionMatch */
+    //                                                     NULL,    /* sendInitialEvents */
+    //                                                     NULL,    /* timeoutSeconds */
+    //                                                     NULL     /* watch */
+    //                                                 ),
+    //                                                 v1_deployment_list_free
+    //                                             );
+
+    //         //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
+
+    //         if( deployment_list ){
+
+    //             //fmt::print("Get deployment list for namespace '{}':\n", k8s_namespace);
+
+    //             listEntry_t *listEntry = NULL;
+    //             v1_deployment_t *deployment = NULL;
+
+    //             list_ForEach(listEntry, deployment_list->items) {
+
+    //                 deployment = (v1_deployment_t *)listEntry->data;
+
+    //                 json deployment_json = cjson( v1_deployment_convertToJSON(deployment) ).toJson();
+
+    //                 deployment_json["apiVersion"] = "apps/v1";
+    //                 deployment_json["kind"] = "Deployment";
+
+    //                 //deployment_json["metadata"] = cjson( v1_object_meta_convertToJSON(deployment->metadata) ).toJson();
+    //                 //deployment_json["spec"] = cjson( v1_deployment_spec_convertToJSON(deployment->spec) ).toJson();
+    //                 //deployment_json["status"] = cjson( v1_deployment_status_convertToJSON(deployment->status) ).toJson();
+
+    //                 deployments.push_back(deployment_json);
+
+    //             }
+
+    //         }else{
+
+    //             fmt::print("Cannot get any deployment.\n");
+
+    //         }
+
+    //     }
+
+    //     return deployments;
+
+    // }
 
 
-            //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
+    // json KubernetesClient::getEvents( const vector<string>& k8s_namespaces ) const{
 
-            if( event_list ){
+    //     auto namespaces = this->resolveNamespaces(k8s_namespaces);
 
-                //fmt::print("Get event list for namespace '{}':\n", k8s_namespace);
+    //     json events = json::array();
 
-                listEntry_t *listEntry = NULL;
-                core_v1_event_t *event = NULL;
-                list_ForEach(listEntry, event_list->items) {
-                    event = (core_v1_event_t *)listEntry->data;
+    //     for( const string& k8s_namespace : namespaces ){
 
-                    json event_json = cjson( core_v1_event_convertToJSON(event) ).toJson();
+    //         std::shared_ptr<core_v1_event_list_t> event_list( 
+    //                                                 CoreV1API_listNamespacedEvent(
+    //                                                     const_cast<apiClient_t*>(api_client.get()), 
+    //                                                     const_cast<char*>(k8s_namespace.c_str()),   /*namespace */
+    //                                                     NULL,    /* pretty */
+    //                                                     NULL,    /* allowWatchBookmarks */
+    //                                                     NULL,    /* continue */
+    //                                                     NULL,    /* fieldSelector */
+    //                                                     NULL,    /* labelSelector */
+    //                                                     NULL,    /* limit */
+    //                                                     NULL,    /* resourceVersion */
+    //                                                     NULL,    /* resourceVersionMatch */
+    //                                                     NULL,    /* sendInitialEvents */
+    //                                                     NULL,    /* timeoutSeconds */
+    //                                                     NULL     /* watch */
+    //                                                 ),
+    //                                                 core_v1_event_list_free
+    //                                             );
 
-                    event_json["apiVersion"] = "v1";
-                    event_json["kind"] = "Event";
 
-                    events.push_back(event_json);
+    //         //fmt::print("The return code of HTTP request={}\n", apiClient->response_code);
 
-                }
+    //         if( event_list ){
 
-            }else{
+    //             //fmt::print("Get event list for namespace '{}':\n", k8s_namespace);
 
-                fmt::print("Cannot get any events.\n");
+    //             listEntry_t *listEntry = NULL;
+    //             core_v1_event_t *event = NULL;
+    //             list_ForEach(listEntry, event_list->items) {
+    //                 event = (core_v1_event_t *)listEntry->data;
 
-            }
+    //                 json event_json = cjson( core_v1_event_convertToJSON(event) ).toJson();
 
-        }
+    //                 event_json["apiVersion"] = "v1";
+    //                 event_json["kind"] = "Event";
 
-        return events;
+    //                 events.push_back(event_json);
 
-    }
+    //             }
+
+    //         }else{
+
+    //             fmt::print("Cannot get any events.\n");
+
+    //         }
+
+    //     }
+
+    //     return events;
+
+    // }
 
 
     json KubernetesClient::getPodLogs( const string& k8s_namespace, const string& pod_name, const string& container ) const{
@@ -461,746 +455,746 @@ std::string to_utf8(std::wstring& wide_string)
     }
 
 
-    json KubernetesClient::getNodes() const{
+    // json KubernetesClient::getNodes() const{
 
-        json nodes = json::array();
+    //     json nodes = json::array();
 
-        std::shared_ptr<v1_node_list_t> node_list( 
-                                    CoreV1API_listNode(
-                                        const_cast<apiClient_t*>(api_client.get()), 
-                                        NULL,    /* pretty */
-                                        NULL,    /* allowWatchBookmarks */
-                                        NULL,    /* continue */
-                                        NULL,    /* fieldSelector */
-                                        NULL,    /* labelSelector */
-                                        NULL,    /* limit */
-                                        NULL,    /* resourceVersion */
-                                        NULL,    /* resourceVersionMatch */
-                                        NULL,    /* sendInitialEvents */
-                                        NULL,    /* timeoutSeconds */
-                                        NULL     /* watch */
-                                    ),
-                                    v1_node_list_free
-                                );
+    //     std::shared_ptr<v1_node_list_t> node_list( 
+    //                                 CoreV1API_listNode(
+    //                                     const_cast<apiClient_t*>(api_client.get()), 
+    //                                     NULL,    /* pretty */
+    //                                     NULL,    /* allowWatchBookmarks */
+    //                                     NULL,    /* continue */
+    //                                     NULL,    /* fieldSelector */
+    //                                     NULL,    /* labelSelector */
+    //                                     NULL,    /* limit */
+    //                                     NULL,    /* resourceVersion */
+    //                                     NULL,    /* resourceVersionMatch */
+    //                                     NULL,    /* sendInitialEvents */
+    //                                     NULL,    /* timeoutSeconds */
+    //                                     NULL     /* watch */
+    //                                 ),
+    //                                 v1_node_list_free
+    //                             );
 
-        if( node_list ){
+    //     if( node_list ){
 
-            listEntry_t *listEntry = NULL;
-            v1_node_t *node = NULL;
-            list_ForEach(listEntry, node_list->items) {
-                node = (v1_node_t *)listEntry->data;
+    //         listEntry_t *listEntry = NULL;
+    //         v1_node_t *node = NULL;
+    //         list_ForEach(listEntry, node_list->items) {
+    //             node = (v1_node_t *)listEntry->data;
 
-                json node_json = cjson( v1_node_convertToJSON(node) ).toJson();
+    //             json node_json = cjson( v1_node_convertToJSON(node) ).toJson();
 
-                node_json["apiVersion"] = "v1";
-                node_json["kind"] = "Node";
+    //             node_json["apiVersion"] = "v1";
+    //             node_json["kind"] = "Node";
 
-                nodes.push_back(node_json);
+    //             nodes.push_back(node_json);
 
-            }
+    //         }
 
-        }else{
+    //     }else{
 
-            fmt::print("Cannot get any nodes.\n");
+    //         fmt::print("Cannot get any nodes.\n");
 
-        }
+    //     }
 
-        return nodes;
+    //     return nodes;
 
-    }
-
-
-
-    json KubernetesClient::getCustomResourceDefinition( const string& name ) const{
-
-        json crd_json = json::object();
-
-        /*
-            // read the specified CustomResourceDefinition
-            //
-            v1_custom_resource_definition_t*
-            ApiextensionsV1API_readCustomResourceDefinition(apiClient_t *apiClient, char *name, char *pretty);
-        */
-
-        std::shared_ptr<v1_custom_resource_definition_t> crd( 
-                                    ApiextensionsV1API_readCustomResourceDefinition(
-                                        const_cast<apiClient_t*>(api_client.get()), 
-                                        const_cast<char*>(name.c_str()),
-                                        NULL    /* pretty */
-                                    ),
-                                    v1_custom_resource_definition_free
-                                );
-
-        if( crd ){
-
-            crd_json = cjson( v1_custom_resource_definition_convertToJSON(crd.get()) ).toJson();
-
-        }else{
-
-            fmt::print("Cannot get this custom resource definition.\n");
-
-        }
-
-        return crd_json;
-
-    }
+    // }
 
 
-    json KubernetesClient::createCustomResourceDefinition( const json& custom_resource_definition ) const{
 
-        json response = json::object();
+    // json KubernetesClient::getCustomResourceDefinition( const string& name ) const{
 
-        cjson crd_cjson(custom_resource_definition);
-        if( !crd_cjson ){
-            fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
-            throw std::runtime_error("Cannot parse the custom resource definition JSON.");
-        }
+    //     json crd_json = json::object();
 
-        cout << crd_cjson << endl;
+    //     /*
+    //         // read the specified CustomResourceDefinition
+    //         //
+    //         v1_custom_resource_definition_t*
+    //         ApiextensionsV1API_readCustomResourceDefinition(apiClient_t *apiClient, char *name, char *pretty);
+    //     */
 
-        // Now, use the cJSON object to parse into the v1_custom_resource_definition_t structure
+    //     std::shared_ptr<v1_custom_resource_definition_t> crd( 
+    //                                 ApiextensionsV1API_readCustomResourceDefinition(
+    //                                     const_cast<apiClient_t*>(api_client.get()), 
+    //                                     const_cast<char*>(name.c_str()),
+    //                                     NULL    /* pretty */
+    //                                 ),
+    //                                 v1_custom_resource_definition_free
+    //                             );
 
-        std::shared_ptr<v1_custom_resource_definition_t> crd( 
-                                                            v1_custom_resource_definition_parseFromJSON(crd_cjson.get()), 
-                                                            v1_custom_resource_definition_free 
-                                                        );
+    //     if( crd ){
 
-        std::shared_ptr<v1_custom_resource_definition_t> created_custom_resource_definition( 
-                                                            ApiextensionsV1API_createCustomResourceDefinition(
-                                                                const_cast<apiClient_t*>(api_client.get()), 
-                                                                crd.get(), 
-                                                                NULL, 
-                                                                NULL, 
-                                                                NULL, 
-                                                                NULL
-                                                            ),
-                                                            v1_custom_resource_definition_free
-                                                        );
+    //         crd_json = cjson( v1_custom_resource_definition_convertToJSON(crd.get()) ).toJson();
 
-        if( created_custom_resource_definition ){
-            cjson cjson_response(v1_custom_resource_definition_convertToJSON(created_custom_resource_definition.get()));
-            if( !cjson_response ){
-                return response;
-            }
-            response = cjson_response.toJson();
-        }
+    //     }else{
 
-        return response;
+    //         fmt::print("Cannot get this custom resource definition.\n");
+
+    //     }
+
+    //     return crd_json;
+
+    // }
+
+
+    // json KubernetesClient::createCustomResourceDefinition( const json& custom_resource_definition ) const{
+
+    //     json response = json::object();
+
+    //     cjson crd_cjson(custom_resource_definition);
+    //     if( !crd_cjson ){
+    //         fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
+    //         throw std::runtime_error("Cannot parse the custom resource definition JSON.");
+    //     }
+
+    //     cout << crd_cjson << endl;
+
+    //     // Now, use the cJSON object to parse into the v1_custom_resource_definition_t structure
+
+    //     std::shared_ptr<v1_custom_resource_definition_t> crd( 
+    //                                                         v1_custom_resource_definition_parseFromJSON(crd_cjson.get()), 
+    //                                                         v1_custom_resource_definition_free 
+    //                                                     );
+
+    //     std::shared_ptr<v1_custom_resource_definition_t> created_custom_resource_definition( 
+    //                                                         ApiextensionsV1API_createCustomResourceDefinition(
+    //                                                             const_cast<apiClient_t*>(api_client.get()), 
+    //                                                             crd.get(), 
+    //                                                             NULL, 
+    //                                                             NULL, 
+    //                                                             NULL, 
+    //                                                             NULL
+    //                                                         ),
+    //                                                         v1_custom_resource_definition_free
+    //                                                     );
+
+    //     if( created_custom_resource_definition ){
+    //         cjson cjson_response(v1_custom_resource_definition_convertToJSON(created_custom_resource_definition.get()));
+    //         if( !cjson_response ){
+    //             return response;
+    //         }
+    //         response = cjson_response.toJson();
+    //     }
+
+    //     return response;
         
-    }
+    // }
 
 
-    json KubernetesClient::deleteCustomResourceDefinition( const json& custom_resource_definition ) const{
+    // json KubernetesClient::deleteCustomResourceDefinition( const json& custom_resource_definition ) const{
             
-        json response = json::object();
+    //     json response = json::object();
 
-        //check to see if the name is specified
-        if( !custom_resource_definition.contains("metadata") || !custom_resource_definition["metadata"].contains("name") || !custom_resource_definition["metadata"]["name"].is_string() || custom_resource_definition["metadata"]["name"].get<string>().empty() ){
-            throw std::runtime_error("The custom resource definition must have a 'metadata.name' field that is a non-empty string.");
-        }
-        const string name = custom_resource_definition["metadata"]["name"].get<string>();
+    //     //check to see if the name is specified
+    //     if( !custom_resource_definition.contains("metadata") || !custom_resource_definition["metadata"].contains("name") || !custom_resource_definition["metadata"]["name"].is_string() || custom_resource_definition["metadata"]["name"].get<string>().empty() ){
+    //         throw std::runtime_error("The custom resource definition must have a 'metadata.name' field that is a non-empty string.");
+    //     }
+    //     const string name = custom_resource_definition["metadata"]["name"].get<string>();
 
-        std::shared_ptr<v1_status_t> status( 
-                                            ApiextensionsV1API_deleteCustomResourceDefinition(
-                                                const_cast<apiClient_t*>(api_client.get()), 
-                                                const_cast<char*>(name.c_str()),
-                                                NULL, /* pretty */
-                                                NULL, /* dryRun */
-                                                NULL, /* gracePeriodSeconds */
-                                                NULL, /* orphanDependents */
-                                                NULL, /* propagationPolicy */
-                                                NULL  /* delete options */
-                                            ),
-                                            v1_status_free
-                                        );
-
-
-        if( status ){
-            cjson cjson_response(v1_status_convertToJSON(status.get()));
-            if( !cjson_response ){
-                return response;
-            }
-            response = cjson_response.toJson();
-        }
-
-        return response;
-
-    }
+    //     std::shared_ptr<v1_status_t> status( 
+    //                                         ApiextensionsV1API_deleteCustomResourceDefinition(
+    //                                             const_cast<apiClient_t*>(api_client.get()), 
+    //                                             const_cast<char*>(name.c_str()),
+    //                                             NULL, /* pretty */
+    //                                             NULL, /* dryRun */
+    //                                             NULL, /* gracePeriodSeconds */
+    //                                             NULL, /* orphanDependents */
+    //                                             NULL, /* propagationPolicy */
+    //                                             NULL  /* delete options */
+    //                                         ),
+    //                                         v1_status_free
+    //                                     );
 
 
-    json KubernetesClient::getCustomResourceDefinitions() const{
+    //     if( status ){
+    //         cjson cjson_response(v1_status_convertToJSON(status.get()));
+    //         if( !cjson_response ){
+    //             return response;
+    //         }
+    //         response = cjson_response.toJson();
+    //     }
 
-        json crds = json::array();
+    //     return response;
 
-        std::shared_ptr<v1_custom_resource_definition_list_t> crd_list( 
-                                    ApiextensionsV1API_listCustomResourceDefinition(
-                                        const_cast<apiClient_t*>(api_client.get()), 
-                                        NULL,    /* pretty */
-                                        NULL,    /* allowWatchBookmarks */
-                                        NULL,    /* continue */
-                                        NULL,    /* fieldSelector */
-                                        NULL,    /* labelSelector */
-                                        NULL,    /* limit */
-                                        NULL,    /* resourceVersion */
-                                        NULL,    /* resourceVersionMatch */
-                                        NULL,    /* sendInitialEvents */
-                                        NULL,    /* timeoutSeconds */
-                                        NULL     /* watch */
-                                    ),
-                                    v1_custom_resource_definition_list_free
-                                );
-
-        if( crd_list ){
-
-            listEntry_t *listEntry = NULL;
-            v1_custom_resource_definition_t *crd = NULL;
-            list_ForEach(listEntry, crd_list->items) {
-                crd = (v1_custom_resource_definition_t *)listEntry->data;
-
-                json crd_json = cjson( v1_custom_resource_definition_convertToJSON(crd) ).toJson();
-
-                crd_json["apiVersion"] = "apiextensions.k8s.io/v1";
-                crd_json["kind"] = "CustomResourceDefinition";
-
-                crds.push_back(crd_json);
-
-            }
-
-        }else{
-
-            fmt::print("Cannot get any custom resource definitions.\n");
-
-        }
-
-        return crds;
-
-    }
+    // }
 
 
+    // json KubernetesClient::getCustomResourceDefinitions() const{
 
+    //     json crds = json::array();
 
-    json KubernetesClient::createCustomResource( const json& custom_resource ) const{
+    //     std::shared_ptr<v1_custom_resource_definition_list_t> crd_list( 
+    //                                 ApiextensionsV1API_listCustomResourceDefinition(
+    //                                     const_cast<apiClient_t*>(api_client.get()), 
+    //                                     NULL,    /* pretty */
+    //                                     NULL,    /* allowWatchBookmarks */
+    //                                     NULL,    /* continue */
+    //                                     NULL,    /* fieldSelector */
+    //                                     NULL,    /* labelSelector */
+    //                                     NULL,    /* limit */
+    //                                     NULL,    /* resourceVersion */
+    //                                     NULL,    /* resourceVersionMatch */
+    //                                     NULL,    /* sendInitialEvents */
+    //                                     NULL,    /* timeoutSeconds */
+    //                                     NULL     /* watch */
+    //                                 ),
+    //                                 v1_custom_resource_definition_list_free
+    //                             );
 
-        json response = json::object();
+    //     if( crd_list ){
 
-        cjson custom_resource_cjson(custom_resource);
-        if( !custom_resource_cjson ){
-            fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
-            throw std::runtime_error("Cannot parse the custom resource JSON.");
-        }
+    //         listEntry_t *listEntry = NULL;
+    //         v1_custom_resource_definition_t *crd = NULL;
+    //         list_ForEach(listEntry, crd_list->items) {
+    //             crd = (v1_custom_resource_definition_t *)listEntry->data;
 
-        //check to see if the namespace is specified (optional for cluster-scoped resources)
-        string k8s_namespace;
-        if( custom_resource.contains("metadata") && custom_resource["metadata"].contains("namespace") && custom_resource["metadata"]["namespace"].is_string() && !custom_resource["metadata"]["namespace"].get<string>().empty() ){
-            k8s_namespace = custom_resource["metadata"]["namespace"].get<string>();
-        }
+    //             json crd_json = cjson( v1_custom_resource_definition_convertToJSON(crd) ).toJson();
 
-        //check to see if the kind is specified
-        if( !custom_resource.contains("kind") || !custom_resource["kind"].is_string() || custom_resource["kind"].get<string>().empty() ){
-            throw std::runtime_error("The custom resource must have a 'kind' field that is a non-empty string.");
-        }
-        const string kind = custom_resource["kind"].get<string>();
+    //             crd_json["apiVersion"] = "apiextensions.k8s.io/v1";
+    //             crd_json["kind"] = "CustomResourceDefinition";
 
-        //check to see if the apiVersion is specified
-        if( !custom_resource.contains("apiVersion") || !custom_resource["apiVersion"].is_string() || custom_resource["apiVersion"].get<string>().empty() ){
-            throw std::runtime_error("The custom resource must have a 'apiVersion' field that is a non-empty string.");
-        }
-        const string api_version = custom_resource["apiVersion"].get<string>();
+    //             crds.push_back(crd_json);
 
+    //         }
 
-        json all_crds = this->getCustomResourceDefinitions();
+    //     }else{
 
-        // get the plural, group, and version from the custom resource definition (match with kind and api_version)
-        // don't just use the first version, make sure they match
-        string plural;
-        string group;
-        string version;
+    //         fmt::print("Cannot get any custom resource definitions.\n");
+
+    //     }
+
+    //     return crds;
+
+    // }
 
 
 
-        /*
 
-        CR:
+    // json KubernetesClient::createCustomResource( const json& custom_resource ) const{
 
-                json cr = R"({
-                    "apiVersion": "example.com/v1",
-                    "kind": "ExampleResource",
-                    "metadata": {
-                        "name": "my-example-resource",
-                        "namespace": "default"
-                    },
-                    "spec": {
-                        "field1": "value1",
-                        "field2": true
-                    }
-                })"_json;
+    //     json response = json::object();
+
+    //     cjson custom_resource_cjson(custom_resource);
+    //     if( !custom_resource_cjson ){
+    //         fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
+    //         throw std::runtime_error("Cannot parse the custom resource JSON.");
+    //     }
+
+    //     //check to see if the namespace is specified (optional for cluster-scoped resources)
+    //     string k8s_namespace;
+    //     if( custom_resource.contains("metadata") && custom_resource["metadata"].contains("namespace") && custom_resource["metadata"]["namespace"].is_string() && !custom_resource["metadata"]["namespace"].get<string>().empty() ){
+    //         k8s_namespace = custom_resource["metadata"]["namespace"].get<string>();
+    //     }
+
+    //     //check to see if the kind is specified
+    //     if( !custom_resource.contains("kind") || !custom_resource["kind"].is_string() || custom_resource["kind"].get<string>().empty() ){
+    //         throw std::runtime_error("The custom resource must have a 'kind' field that is a non-empty string.");
+    //     }
+    //     const string kind = custom_resource["kind"].get<string>();
+
+    //     //check to see if the apiVersion is specified
+    //     if( !custom_resource.contains("apiVersion") || !custom_resource["apiVersion"].is_string() || custom_resource["apiVersion"].get<string>().empty() ){
+    //         throw std::runtime_error("The custom resource must have a 'apiVersion' field that is a non-empty string.");
+    //     }
+    //     const string api_version = custom_resource["apiVersion"].get<string>();
+
+
+    //     json all_crds = this->getCustomResourceDefinitions();
+
+    //     // get the plural, group, and version from the custom resource definition (match with kind and api_version)
+    //     // don't just use the first version, make sure they match
+    //     string plural;
+    //     string group;
+    //     string version;
 
 
 
-        CRD: 
-        "spec": {
-            "conversion": {
-                "strategy": "None"
-            },
-            "group": "example.com",
-            "names": {
-                "kind": "ExampleResource",
-                "listKind": "ExampleResourceList",
-                "plural": "exampleresources",
-                "shortNames": [
-                    "exr"
-                ],
-                "singular": "exampleresource"
-            },
-            "scope": "Namespaced",
-            "versions": [
-                {
-                    "name": "v1",
-                    "schema": {
-                        "openAPIV3Schema": {
-                            "type": "object"
-                        }
-                    },
-                    "served": true,
-                    "storage": true
-                }
-            ]
-        },
+    //     /*
+
+    //     CR:
+
+    //             json cr = R"({
+    //                 "apiVersion": "example.com/v1",
+    //                 "kind": "ExampleResource",
+    //                 "metadata": {
+    //                     "name": "my-example-resource",
+    //                     "namespace": "default"
+    //                 },
+    //                 "spec": {
+    //                     "field1": "value1",
+    //                     "field2": true
+    //                 }
+    //             })"_json;
+
+
+
+    //     CRD: 
+    //     "spec": {
+    //         "conversion": {
+    //             "strategy": "None"
+    //         },
+    //         "group": "example.com",
+    //         "names": {
+    //             "kind": "ExampleResource",
+    //             "listKind": "ExampleResourceList",
+    //             "plural": "exampleresources",
+    //             "shortNames": [
+    //                 "exr"
+    //             ],
+    //             "singular": "exampleresource"
+    //         },
+    //         "scope": "Namespaced",
+    //         "versions": [
+    //             {
+    //                 "name": "v1",
+    //                 "schema": {
+    //                     "openAPIV3Schema": {
+    //                         "type": "object"
+    //                     }
+    //                 },
+    //                 "served": true,
+    //                 "storage": true
+    //             }
+    //         ]
+    //     },
 
         
-        */
+    //     */
 
-        for( const auto& crd : all_crds ){
+    //     for( const auto& crd : all_crds ){
 
-            if( crd.contains("spec") && crd["spec"].contains("group") && crd["spec"]["group"].is_string() && crd["spec"]["group"].get<string>() == api_version.substr(0, api_version.find("/")) ){
+    //         if( crd.contains("spec") && crd["spec"].contains("group") && crd["spec"]["group"].is_string() && crd["spec"]["group"].get<string>() == api_version.substr(0, api_version.find("/")) ){
 
-                group = crd["spec"]["group"].get<string>();
+    //             group = crd["spec"]["group"].get<string>();
 
-                if( crd["spec"].contains("names") && crd["spec"]["names"].contains("kind") && crd["spec"]["names"]["kind"].is_string() && crd["spec"]["names"]["kind"].get<string>() == kind ){
+    //             if( crd["spec"].contains("names") && crd["spec"]["names"].contains("kind") && crd["spec"]["names"]["kind"].is_string() && crd["spec"]["names"]["kind"].get<string>() == kind ){
 
-                    if( crd["spec"]["names"].contains("plural") && crd["spec"]["names"]["plural"].is_string() && !crd["spec"]["names"]["plural"].get<string>().empty() ){
-                        plural = crd["spec"]["names"]["plural"].get<string>();
-                    }
+    //                 if( crd["spec"]["names"].contains("plural") && crd["spec"]["names"]["plural"].is_string() && !crd["spec"]["names"]["plural"].get<string>().empty() ){
+    //                     plural = crd["spec"]["names"]["plural"].get<string>();
+    //                 }
 
-                    if( crd["spec"].contains("versions") && crd["spec"]["versions"].is_array() ){
+    //                 if( crd["spec"].contains("versions") && crd["spec"]["versions"].is_array() ){
 
-                        for( const auto& version_obj : crd["spec"]["versions"] ){
+    //                     for( const auto& version_obj : crd["spec"]["versions"] ){
 
-                            if( version_obj.contains("name") && version_obj["name"].is_string() && version_obj["name"].get<string>() == api_version.substr(api_version.find("/")+1) ){
+    //                         if( version_obj.contains("name") && version_obj["name"].is_string() && version_obj["name"].get<string>() == api_version.substr(api_version.find("/")+1) ){
 
-                                version = version_obj["name"].get<string>();
+    //                             version = version_obj["name"].get<string>();
 
-                            }
+    //                         }
 
-                        }
+    //                     }
 
-                    }
+    //                 }
 
-                }
+    //             }
 
-            }
+    //         }
 
-        }
+    //     }
 
-        cout << "The plural: " << plural << endl;
-        cout << "The group: " << group << endl;
-        cout << "The version: " << version << endl;
-        cout << "The namespace: " << k8s_namespace << endl;
-        cout << "The kind: " << kind << endl;
-        cout << "The apiVersion: " << api_version << endl;
-
-
-        /*
-
-        // Creates a cluster scoped Custom object
-        //
-        object_t*
-        CustomObjectsAPI_createClusterCustomObject(apiClient_t *apiClient, char *group, char *version, char *plural, object_t *body, char *pretty, char *dryRun, char *fieldManager, char *fieldValidation);
+    //     cout << "The plural: " << plural << endl;
+    //     cout << "The group: " << group << endl;
+    //     cout << "The version: " << version << endl;
+    //     cout << "The namespace: " << k8s_namespace << endl;
+    //     cout << "The kind: " << kind << endl;
+    //     cout << "The apiVersion: " << api_version << endl;
 
 
-        // Creates a namespace scoped Custom object
-        //
-        object_t*
-        CustomObjectsAPI_createNamespacedCustomObject(apiClient_t *apiClient, char *group, char *version, char *_namespace, char *plural, object_t *body, char *pretty, char *dryRun, char *fieldManager, char *fieldValidation);
+    //     /*
+
+    //     // Creates a cluster scoped Custom object
+    //     //
+    //     object_t*
+    //     CustomObjectsAPI_createClusterCustomObject(apiClient_t *apiClient, char *group, char *version, char *plural, object_t *body, char *pretty, char *dryRun, char *fieldManager, char *fieldValidation);
+
+
+    //     // Creates a namespace scoped Custom object
+    //     //
+    //     object_t*
+    //     CustomObjectsAPI_createNamespacedCustomObject(apiClient_t *apiClient, char *group, char *version, char *_namespace, char *plural, object_t *body, char *pretty, char *dryRun, char *fieldManager, char *fieldValidation);
         
-        */
+    //     */
 
-        if( k8s_namespace.empty() ){
+    //     if( k8s_namespace.empty() ){
 
-            //cluster-scoped custom resource
+    //         //cluster-scoped custom resource
 
-            std::shared_ptr<object_t> custom_resource_type( object_parseFromJSON(custom_resource_cjson.get()), object_free );
-            std::shared_ptr<object_t> created_custom_resource(
-                                                CustomObjectsAPI_createClusterCustomObject(
-                                                    const_cast<apiClient_t*>(api_client.get()), /* apiClient */
-                                                    const_cast<char*>(group.c_str()),           /* group */
-                                                    const_cast<char*>(version.c_str()),         /* version */
-                                                    const_cast<char*>(plural.c_str()),          /* plural */
-                                                    custom_resource_type.get(),                 /* body */
-                                                    NULL, /* pretty */
-                                                    NULL, /* dryRun */
-                                                    NULL, /* fieldManager */
-                                                    NULL  /* create options */
-                                                ),
-                                                object_free
-                                            );
+    //         std::shared_ptr<object_t> custom_resource_type( object_parseFromJSON(custom_resource_cjson.get()), object_free );
+    //         std::shared_ptr<object_t> created_custom_resource(
+    //                                             CustomObjectsAPI_createClusterCustomObject(
+    //                                                 const_cast<apiClient_t*>(api_client.get()), /* apiClient */
+    //                                                 const_cast<char*>(group.c_str()),           /* group */
+    //                                                 const_cast<char*>(version.c_str()),         /* version */
+    //                                                 const_cast<char*>(plural.c_str()),          /* plural */
+    //                                                 custom_resource_type.get(),                 /* body */
+    //                                                 NULL, /* pretty */
+    //                                                 NULL, /* dryRun */
+    //                                                 NULL, /* fieldManager */
+    //                                                 NULL  /* create options */
+    //                                             ),
+    //                                             object_free
+    //                                         );
             
-            if( created_custom_resource ){
+    //         if( created_custom_resource ){
                     
-                cjson cjson_response(object_convertToJSON(created_custom_resource.get()));
-                if( !cjson_response ){
-                    return response;
-                }
-                response = cjson_response.toJson();
+    //             cjson cjson_response(object_convertToJSON(created_custom_resource.get()));
+    //             if( !cjson_response ){
+    //                 return response;
+    //             }
+    //             response = cjson_response.toJson();
 
-            } else {
-                fmt::print("Cannot create a cluster-scoped custom resource.\n");
-            }
+    //         } else {
+    //             fmt::print("Cannot create a cluster-scoped custom resource.\n");
+    //         }
 
-        }else{
+    //     }else{
 
-            //namespace-scoped custom resource
+    //         //namespace-scoped custom resource
             
-            std::shared_ptr<object_t> custom_resource_type( object_parseFromJSON(custom_resource_cjson.get()), object_free );
-            std::shared_ptr<object_t> created_custom_resource(
-                                                CustomObjectsAPI_createNamespacedCustomObject(
-                                                    const_cast<apiClient_t*>(api_client.get()), /* apiClient */
-                                                    const_cast<char*>(group.c_str()),           /* group */
-                                                    const_cast<char*>(version.c_str()),         /* version */
-                                                    const_cast<char*>(k8s_namespace.c_str()),   /* namespace */
-                                                    const_cast<char*>(plural.c_str()),          /* plural */
-                                                    custom_resource_type.get(),                 /* body */
-                                                    NULL, /* pretty */
-                                                    NULL, /* dryRun */
-                                                    NULL, /* fieldManager */
-                                                    NULL  /* create options */
-                                                ),
-                                                object_free
-                                            );
+    //         std::shared_ptr<object_t> custom_resource_type( object_parseFromJSON(custom_resource_cjson.get()), object_free );
+    //         std::shared_ptr<object_t> created_custom_resource(
+    //                                             CustomObjectsAPI_createNamespacedCustomObject(
+    //                                                 const_cast<apiClient_t*>(api_client.get()), /* apiClient */
+    //                                                 const_cast<char*>(group.c_str()),           /* group */
+    //                                                 const_cast<char*>(version.c_str()),         /* version */
+    //                                                 const_cast<char*>(k8s_namespace.c_str()),   /* namespace */
+    //                                                 const_cast<char*>(plural.c_str()),          /* plural */
+    //                                                 custom_resource_type.get(),                 /* body */
+    //                                                 NULL, /* pretty */
+    //                                                 NULL, /* dryRun */
+    //                                                 NULL, /* fieldManager */
+    //                                                 NULL  /* create options */
+    //                                             ),
+    //                                             object_free
+    //                                         );
             
-            if( created_custom_resource ){
+    //         if( created_custom_resource ){
                     
-                cjson cjson_response(object_convertToJSON(created_custom_resource.get()));
-                if( !cjson_response ){
-                    return response;
-                }
-                response = cjson_response.toJson();
+    //             cjson cjson_response(object_convertToJSON(created_custom_resource.get()));
+    //             if( !cjson_response ){
+    //                 return response;
+    //             }
+    //             response = cjson_response.toJson();
 
-            } else {
-                fmt::print("Cannot create a cluster-scoped custom resource.\n");
-            }
+    //         } else {
+    //             fmt::print("Cannot create a cluster-scoped custom resource.\n");
+    //         }
 
-        }
+    //     }
 
-        return response;
+    //     return response;
 
-    }
-
-
-
-    json KubernetesClient::deleteCustomResource( const json& custom_resource ) const{
-
-        json response = json::object();
-
-        //check to see if the name is specified
-        if( !custom_resource.contains("metadata") || !custom_resource["metadata"].contains("name") || !custom_resource["metadata"]["name"].is_string() || custom_resource["metadata"]["name"].get<string>().empty() ){
-            throw std::runtime_error("The custom resource must have a 'metadata.name' field that is a non-empty string.");
-        }
-        const string name = custom_resource["metadata"]["name"].get<string>();
-
-
-        //check to see if the namespace is specified (optional for cluster-scoped resources)
-        string k8s_namespace;
-        if( custom_resource.contains("metadata") && custom_resource["metadata"].contains("namespace") && custom_resource["metadata"]["namespace"].is_string() && !custom_resource["metadata"]["namespace"].get<string>().empty() ){
-            k8s_namespace = custom_resource["metadata"]["namespace"].get<string>();
-        }
-
-        //check to see if the kind is specified
-        if( !custom_resource.contains("kind") || !custom_resource["kind"].is_string() || custom_resource["kind"].get<string>().empty() ){
-            throw std::runtime_error("The custom resource must have a 'kind' field that is a non-empty string.");
-        }
-        const string kind = custom_resource["kind"].get<string>();
-
-        //check to see if the apiVersion is specified
-        if( !custom_resource.contains("apiVersion") || !custom_resource["apiVersion"].is_string() || custom_resource["apiVersion"].get<string>().empty() ){
-            throw std::runtime_error("The custom resource must have a 'apiVersion' field that is a non-empty string.");
-        }
-        const string api_version = custom_resource["apiVersion"].get<string>();
+    // }
 
 
 
+    // json KubernetesClient::deleteCustomResource( const json& custom_resource ) const{
 
-        json all_crds = this->getCustomResourceDefinitions();
+    //     json response = json::object();
 
-        // get the plural, group, and version from the custom resource definition (match with kind and api_version)
-        // don't just use the first version, make sure they match
-        string plural;
-        string group;
-        string version;
-
-
-
-        /*
-
-        CR:
-
-                json cr = R"({
-                    "apiVersion": "example.com/v1",
-                    "kind": "ExampleResource",
-                    "metadata": {
-                        "name": "my-example-resource",
-                        "namespace": "default"
-                    },
-                    "spec": {
-                        "field1": "value1",
-                        "field2": true
-                    }
-                })"_json;
+    //     //check to see if the name is specified
+    //     if( !custom_resource.contains("metadata") || !custom_resource["metadata"].contains("name") || !custom_resource["metadata"]["name"].is_string() || custom_resource["metadata"]["name"].get<string>().empty() ){
+    //         throw std::runtime_error("The custom resource must have a 'metadata.name' field that is a non-empty string.");
+    //     }
+    //     const string name = custom_resource["metadata"]["name"].get<string>();
 
 
+    //     //check to see if the namespace is specified (optional for cluster-scoped resources)
+    //     string k8s_namespace;
+    //     if( custom_resource.contains("metadata") && custom_resource["metadata"].contains("namespace") && custom_resource["metadata"]["namespace"].is_string() && !custom_resource["metadata"]["namespace"].get<string>().empty() ){
+    //         k8s_namespace = custom_resource["metadata"]["namespace"].get<string>();
+    //     }
 
-        CRD: 
-        "spec": {
-            "conversion": {
-                "strategy": "None"
-            },
-            "group": "example.com",
-            "names": {
-                "kind": "ExampleResource",
-                "listKind": "ExampleResourceList",
-                "plural": "exampleresources",
-                "shortNames": [
-                    "exr"
-                ],
-                "singular": "exampleresource"
-            },
-            "scope": "Namespaced",
-            "versions": [
-                {
-                    "name": "v1",
-                    "schema": {
-                        "openAPIV3Schema": {
-                            "type": "object"
-                        }
-                    },
-                    "served": true,
-                    "storage": true
-                }
-            ]
-        },
+    //     //check to see if the kind is specified
+    //     if( !custom_resource.contains("kind") || !custom_resource["kind"].is_string() || custom_resource["kind"].get<string>().empty() ){
+    //         throw std::runtime_error("The custom resource must have a 'kind' field that is a non-empty string.");
+    //     }
+    //     const string kind = custom_resource["kind"].get<string>();
+
+    //     //check to see if the apiVersion is specified
+    //     if( !custom_resource.contains("apiVersion") || !custom_resource["apiVersion"].is_string() || custom_resource["apiVersion"].get<string>().empty() ){
+    //         throw std::runtime_error("The custom resource must have a 'apiVersion' field that is a non-empty string.");
+    //     }
+    //     const string api_version = custom_resource["apiVersion"].get<string>();
+
+
+
+
+    //     json all_crds = this->getCustomResourceDefinitions();
+
+    //     // get the plural, group, and version from the custom resource definition (match with kind and api_version)
+    //     // don't just use the first version, make sure they match
+    //     string plural;
+    //     string group;
+    //     string version;
+
+
+
+    //     /*
+
+    //     CR:
+
+    //             json cr = R"({
+    //                 "apiVersion": "example.com/v1",
+    //                 "kind": "ExampleResource",
+    //                 "metadata": {
+    //                     "name": "my-example-resource",
+    //                     "namespace": "default"
+    //                 },
+    //                 "spec": {
+    //                     "field1": "value1",
+    //                     "field2": true
+    //                 }
+    //             })"_json;
+
+
+
+    //     CRD: 
+    //     "spec": {
+    //         "conversion": {
+    //             "strategy": "None"
+    //         },
+    //         "group": "example.com",
+    //         "names": {
+    //             "kind": "ExampleResource",
+    //             "listKind": "ExampleResourceList",
+    //             "plural": "exampleresources",
+    //             "shortNames": [
+    //                 "exr"
+    //             ],
+    //             "singular": "exampleresource"
+    //         },
+    //         "scope": "Namespaced",
+    //         "versions": [
+    //             {
+    //                 "name": "v1",
+    //                 "schema": {
+    //                     "openAPIV3Schema": {
+    //                         "type": "object"
+    //                     }
+    //                 },
+    //                 "served": true,
+    //                 "storage": true
+    //             }
+    //         ]
+    //     },
 
         
-        */
+    //     */
 
-        for( const auto& crd : all_crds ){
+    //     for( const auto& crd : all_crds ){
 
-            if( crd.contains("spec") && crd["spec"].contains("group") && crd["spec"]["group"].is_string() && crd["spec"]["group"].get<string>() == api_version.substr(0, api_version.find("/")) ){
+    //         if( crd.contains("spec") && crd["spec"].contains("group") && crd["spec"]["group"].is_string() && crd["spec"]["group"].get<string>() == api_version.substr(0, api_version.find("/")) ){
 
-                group = crd["spec"]["group"].get<string>();
+    //             group = crd["spec"]["group"].get<string>();
 
-                if( crd["spec"].contains("names") && crd["spec"]["names"].contains("kind") && crd["spec"]["names"]["kind"].is_string() && crd["spec"]["names"]["kind"].get<string>() == kind ){
+    //             if( crd["spec"].contains("names") && crd["spec"]["names"].contains("kind") && crd["spec"]["names"]["kind"].is_string() && crd["spec"]["names"]["kind"].get<string>() == kind ){
 
-                    if( crd["spec"]["names"].contains("plural") && crd["spec"]["names"]["plural"].is_string() && !crd["spec"]["names"]["plural"].get<string>().empty() ){
-                        plural = crd["spec"]["names"]["plural"].get<string>();
-                    }
+    //                 if( crd["spec"]["names"].contains("plural") && crd["spec"]["names"]["plural"].is_string() && !crd["spec"]["names"]["plural"].get<string>().empty() ){
+    //                     plural = crd["spec"]["names"]["plural"].get<string>();
+    //                 }
 
-                    if( crd["spec"].contains("versions") && crd["spec"]["versions"].is_array() ){
+    //                 if( crd["spec"].contains("versions") && crd["spec"]["versions"].is_array() ){
 
-                        for( const auto& version_obj : crd["spec"]["versions"] ){
+    //                     for( const auto& version_obj : crd["spec"]["versions"] ){
 
-                            if( version_obj.contains("name") && version_obj["name"].is_string() && version_obj["name"].get<string>() == api_version.substr(api_version.find("/")+1) ){
+    //                         if( version_obj.contains("name") && version_obj["name"].is_string() && version_obj["name"].get<string>() == api_version.substr(api_version.find("/")+1) ){
 
-                                version = version_obj["name"].get<string>();
+    //                             version = version_obj["name"].get<string>();
 
-                            }
+    //                         }
 
-                        }
+    //                     }
 
-                    }
+    //                 }
 
-                }
+    //             }
 
-            }
+    //         }
 
-        }
+    //     }
 
-        cout << "The plural: " << plural << endl;
-        cout << "The group: " << group << endl;
-        cout << "The version: " << version << endl;
-        cout << "The namespace: " << k8s_namespace << endl;
-        cout << "The kind: " << kind << endl;
-        cout << "The apiVersion: " << api_version << endl;
-        cout << "The name: " << name << endl;
-
-
+    //     cout << "The plural: " << plural << endl;
+    //     cout << "The group: " << group << endl;
+    //     cout << "The version: " << version << endl;
+    //     cout << "The namespace: " << k8s_namespace << endl;
+    //     cout << "The kind: " << kind << endl;
+    //     cout << "The apiVersion: " << api_version << endl;
+    //     cout << "The name: " << name << endl;
 
 
 
 
-        if( k8s_namespace.empty() ){
-
-            //cluster-scoped custom resource
-
-            std::shared_ptr<object_t> deleted_custom_resource( 
-                                                CustomObjectsAPI_deleteClusterCustomObject(
-                                                    const_cast<apiClient_t*>(api_client.get()), /* apiClient */
-                                                    const_cast<char*>(group.c_str()),           /* group */
-                                                    const_cast<char*>(version.c_str()),     /* version */
-                                                    const_cast<char*>(plural.c_str()),          /* plural */
-                                                    const_cast<char*>(name.c_str()),            /* name */
-                                                    NULL, /* gracePeriodSeconds */
-                                                    NULL, /* orphanDependents */
-                                                    NULL, /* propagationPolicy */
-                                                    NULL, /* dryRun */
-                                                    NULL  /* delete options */
-                                                ),
-                                                object_free
-                                            );
-
-            if( deleted_custom_resource ){
-                cjson cjson_response( object_convertToJSON(deleted_custom_resource.get()) );
-                if( !cjson_response ){
-                    return response;
-                }
-                response = cjson_response.toJson();
-            }
-
-        }else{
-
-            //namespace-scoped custom resource
-
-            std::shared_ptr<object_t> deleted_custom_resource( 
-                                                CustomObjectsAPI_deleteNamespacedCustomObject(
-                                                    const_cast<apiClient_t*>(api_client.get()), /* apiClient */
-                                                    const_cast<char*>(group.c_str()),           /* group */
-                                                    const_cast<char*>(version.c_str()),     /* version */
-                                                    const_cast<char*>(k8s_namespace.c_str()),   /* namespace */
-                                                    const_cast<char*>(plural.c_str()),          /* plural */
-                                                    const_cast<char*>(name.c_str()),            /* name */
-                                                    NULL, /* gracePeriodSeconds */
-                                                    NULL, /* orphanDependents */
-                                                    NULL, /* propagationPolicy */
-                                                    NULL, /* dryRun */
-                                                    NULL  /* delete options */
-                                                ),
-                                                object_free
-                                            );
-
-            if( deleted_custom_resource ){
-                cjson cjson_response( object_convertToJSON(deleted_custom_resource.get()) );
-                if( !cjson_response ){
-                    return response;
-                }
-                response = cjson_response.toJson();
-            }
-
-        }
 
 
-        return response;
+    //     if( k8s_namespace.empty() ){
 
-    }
+    //         //cluster-scoped custom resource
+
+    //         std::shared_ptr<object_t> deleted_custom_resource( 
+    //                                             CustomObjectsAPI_deleteClusterCustomObject(
+    //                                                 const_cast<apiClient_t*>(api_client.get()), /* apiClient */
+    //                                                 const_cast<char*>(group.c_str()),           /* group */
+    //                                                 const_cast<char*>(version.c_str()),     /* version */
+    //                                                 const_cast<char*>(plural.c_str()),          /* plural */
+    //                                                 const_cast<char*>(name.c_str()),            /* name */
+    //                                                 NULL, /* gracePeriodSeconds */
+    //                                                 NULL, /* orphanDependents */
+    //                                                 NULL, /* propagationPolicy */
+    //                                                 NULL, /* dryRun */
+    //                                                 NULL  /* delete options */
+    //                                             ),
+    //                                             object_free
+    //                                         );
+
+    //         if( deleted_custom_resource ){
+    //             cjson cjson_response( object_convertToJSON(deleted_custom_resource.get()) );
+    //             if( !cjson_response ){
+    //                 return response;
+    //             }
+    //             response = cjson_response.toJson();
+    //         }
+
+    //     }else{
+
+    //         //namespace-scoped custom resource
+
+    //         std::shared_ptr<object_t> deleted_custom_resource( 
+    //                                             CustomObjectsAPI_deleteNamespacedCustomObject(
+    //                                                 const_cast<apiClient_t*>(api_client.get()), /* apiClient */
+    //                                                 const_cast<char*>(group.c_str()),           /* group */
+    //                                                 const_cast<char*>(version.c_str()),     /* version */
+    //                                                 const_cast<char*>(k8s_namespace.c_str()),   /* namespace */
+    //                                                 const_cast<char*>(plural.c_str()),          /* plural */
+    //                                                 const_cast<char*>(name.c_str()),            /* name */
+    //                                                 NULL, /* gracePeriodSeconds */
+    //                                                 NULL, /* orphanDependents */
+    //                                                 NULL, /* propagationPolicy */
+    //                                                 NULL, /* dryRun */
+    //                                                 NULL  /* delete options */
+    //                                             ),
+    //                                             object_free
+    //                                         );
+
+    //         if( deleted_custom_resource ){
+    //             cjson cjson_response( object_convertToJSON(deleted_custom_resource.get()) );
+    //             if( !cjson_response ){
+    //                 return response;
+    //             }
+    //             response = cjson_response.toJson();
+    //         }
+
+    //     }
+
+
+    //     return response;
+
+    // }
 
 
 
 
-    json KubernetesClient::createPod( const json& pod ) const{
+    // json KubernetesClient::createPod( const json& pod ) const{
 
-        json response = json::object();
+    //     json response = json::object();
 
-        cjson pod_cjson(pod);
-        if( !pod_cjson ){
-            fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
-            throw std::runtime_error("Cannot parse the pod JSON.");
-        }
+    //     cjson pod_cjson(pod);
+    //     if( !pod_cjson ){
+    //         fmt::print("Error before: [%s]\n", cJSON_GetErrorPtr());
+    //         throw std::runtime_error("Cannot parse the pod JSON.");
+    //     }
         
-        //check to see if the namespace is specified
-        if( !pod.contains("metadata") || !pod["metadata"].contains("namespace") || !pod["metadata"]["namespace"].is_string() || pod["metadata"]["namespace"].get<string>().empty() ){
-            throw std::runtime_error("The pod must have a 'metadata.namespace' field that is a non-empty string.");
-        }
-        const string k8s_namespace = pod["metadata"]["namespace"].get<string>();
+    //     //check to see if the namespace is specified
+    //     if( !pod.contains("metadata") || !pod["metadata"].contains("namespace") || !pod["metadata"]["namespace"].is_string() || pod["metadata"]["namespace"].get<string>().empty() ){
+    //         throw std::runtime_error("The pod must have a 'metadata.namespace' field that is a non-empty string.");
+    //     }
+    //     const string k8s_namespace = pod["metadata"]["namespace"].get<string>();
 
 
-        std::shared_ptr<v1_pod_t> pod_type( v1_pod_parseFromJSON(pod_cjson.get()), v1_pod_free );
-        std::shared_ptr<v1_pod_t> created_pod( 
-                                            CoreV1API_createNamespacedPod(
-                                                const_cast<apiClient_t*>(api_client.get()), 
-                                                const_cast<char*>(k8s_namespace.c_str()),
-                                                pod_type.get(),
-                                                NULL, /* pretty */
-                                                NULL, /* dryRun */
-                                                NULL, /* fieldManager */
-                                                NULL  /* create options */
-                                            ),
-                                            v1_pod_free
-                                        );
+    //     std::shared_ptr<v1_pod_t> pod_type( v1_pod_parseFromJSON(pod_cjson.get()), v1_pod_free );
+    //     std::shared_ptr<v1_pod_t> created_pod( 
+    //                                         CoreV1API_createNamespacedPod(
+    //                                             const_cast<apiClient_t*>(api_client.get()), 
+    //                                             const_cast<char*>(k8s_namespace.c_str()),
+    //                                             pod_type.get(),
+    //                                             NULL, /* pretty */
+    //                                             NULL, /* dryRun */
+    //                                             NULL, /* fieldManager */
+    //                                             NULL  /* create options */
+    //                                         ),
+    //                                         v1_pod_free
+    //                                     );
 
 
-        if( created_pod ){
+    //     if( created_pod ){
 
-            cjson cjson_response(v1_pod_convertToJSON(created_pod.get()));
-            if( !cjson_response ){
-                return response;
-            }
-            response = cjson_response.toJson();
+    //         cjson cjson_response(v1_pod_convertToJSON(created_pod.get()));
+    //         if( !cjson_response ){
+    //             return response;
+    //         }
+    //         response = cjson_response.toJson();
 
-        } else {
-            fmt::print("Cannot create a pod.\n");
-        }
+    //     } else {
+    //         fmt::print("Cannot create a pod.\n");
+    //     }
 
-        return response;
+    //     return response;
         
-    }
+    // }
 
 
-    json KubernetesClient::deletePod( const json& pod ) const{
+    // json KubernetesClient::deletePod( const json& pod ) const{
 
-        json response = json::object();
+    //     json response = json::object();
 
-        //check to see if the namespace is specified
-        if( !pod.contains("metadata") || !pod["metadata"].contains("namespace") || !pod["metadata"]["namespace"].is_string() || pod["metadata"]["namespace"].get<string>().empty() ){
-            throw std::runtime_error("The pod must have a 'metadata.namespace' field that is a non-empty string.");
-        }
-        const string k8s_namespace = pod["metadata"]["namespace"].get<string>();
+    //     //check to see if the namespace is specified
+    //     if( !pod.contains("metadata") || !pod["metadata"].contains("namespace") || !pod["metadata"]["namespace"].is_string() || pod["metadata"]["namespace"].get<string>().empty() ){
+    //         throw std::runtime_error("The pod must have a 'metadata.namespace' field that is a non-empty string.");
+    //     }
+    //     const string k8s_namespace = pod["metadata"]["namespace"].get<string>();
 
-        //check to see if the name is specified
-        if( !pod.contains("metadata") || !pod["metadata"].contains("name") || !pod["metadata"]["name"].is_string() || pod["metadata"]["name"].get<string>().empty() ){
-            throw std::runtime_error("The pod must have a 'metadata.name' field that is a non-empty string.");
-        }
-        const string pod_name = pod["metadata"]["name"].get<string>();
+    //     //check to see if the name is specified
+    //     if( !pod.contains("metadata") || !pod["metadata"].contains("name") || !pod["metadata"]["name"].is_string() || pod["metadata"]["name"].get<string>().empty() ){
+    //         throw std::runtime_error("The pod must have a 'metadata.name' field that is a non-empty string.");
+    //     }
+    //     const string pod_name = pod["metadata"]["name"].get<string>();
 
 
-        std::shared_ptr<v1_pod_t> pod_object(
-                                            CoreV1API_deleteNamespacedPod(
-                                                const_cast<apiClient_t*>(api_client.get()), 
-                                                const_cast<char*>(pod_name.c_str()),
-                                                const_cast<char*>(k8s_namespace.c_str()),
-                                                NULL, /* pretty */                                            
-                                                NULL, /* dryRun */
-                                                NULL, /* gracePeriodSeconds */
-                                                NULL, /* orphanDependents */
-                                                NULL, /* propagationPolicy */
-                                                NULL /* delete options */
-                                            ), 
-                                            v1_pod_free 
-                                        );
+    //     std::shared_ptr<v1_pod_t> pod_object(
+    //                                         CoreV1API_deleteNamespacedPod(
+    //                                             const_cast<apiClient_t*>(api_client.get()), 
+    //                                             const_cast<char*>(pod_name.c_str()),
+    //                                             const_cast<char*>(k8s_namespace.c_str()),
+    //                                             NULL, /* pretty */                                            
+    //                                             NULL, /* dryRun */
+    //                                             NULL, /* gracePeriodSeconds */
+    //                                             NULL, /* orphanDependents */
+    //                                             NULL, /* propagationPolicy */
+    //                                             NULL /* delete options */
+    //                                         ), 
+    //                                         v1_pod_free 
+    //                                     );
 
-        if( pod_object ){
+    //     if( pod_object ){
 
-            cjson cjson_response(v1_pod_convertToJSON(pod_object.get()));
-            if( !cjson_response ){
-                return response;
-            }
+    //         cjson cjson_response(v1_pod_convertToJSON(pod_object.get()));
+    //         if( !cjson_response ){
+    //             return response;
+    //         }
 
-            response = cjson_response.toJson();
+    //         response = cjson_response.toJson();
 
-        }else{
-            fmt::print("Cannot delete a pod.\n");
-        }
+    //     }else{
+    //         fmt::print("Cannot delete a pod.\n");
+    //     }
 
-        return response;
+    //     return response;
 
-    }
+    // }
 
 
 
