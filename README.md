@@ -63,8 +63,9 @@ This project also contains a CLI application, kubepp, which is an alternative to
 ## Building
 
 ```bash
-cmake -S . -B build
-cmake --build build --target all
+cmake .
+make -j4
+sudo make install
 ```
 
 ## Running Tests
@@ -77,16 +78,21 @@ cmake --build build --target test
 ## Running
 
 ```bash
-KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E ./build/kubepp logs
+export KUBECONFIG="/etc/rancher/k3s/k3s.yaml"
 
-./build/kubepp events watch
+kubepp logs
 
-./build/kubepp events --help
+kubepp events watch
 
-KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E ./build/kubepp --help
+kubepp events --help
 
-KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E kubectl api-resources
-KUBECONFIG="/etc/rancher/k3s/k3s.yaml" sudo -E kubectl api-versions
+kubepp --help
+
+kubectl api-resources
+kubectl api-versions
+
+kubepp export resources > all_resources.json
+kubepp export api > all_kinds.json
 ```
 
 

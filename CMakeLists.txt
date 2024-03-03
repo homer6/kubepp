@@ -55,3 +55,18 @@ target_link_libraries(kubepp PRIVATE kubernetes fmt::fmt)
 # add_test(NAME kubepp_test COMMAND test_kubepp)
 
 
+
+
+install(TARGETS kubepp DESTINATION bin)
+
+add_library(kubepp_lib SHARED ${SOURCES})
+target_link_libraries(kubepp_lib PRIVATE kubernetes fmt::fmt)
+
+install(TARGETS kubepp_lib LIBRARY DESTINATION lib)
+
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/"
+        DESTINATION "include/kubepp"
+        FILES_MATCHING
+        PATTERN "*.h"
+        PATTERN "*.hpp")
+
