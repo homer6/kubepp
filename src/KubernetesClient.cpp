@@ -43,7 +43,7 @@ namespace kubepp{
             throw std::runtime_error("Cannot load kubernetes configuration.");
         }
 
-        fmt::print("The detected base path: {}\n", detected_base_path);
+        //fmt::print("The detected base path: {}\n", detected_base_path);
 
         this->api_client = std::shared_ptr<apiClient_t>( apiClient_create_with_base_path(detected_base_path, sslConfig, apiKeys), apiClient_free);
         
