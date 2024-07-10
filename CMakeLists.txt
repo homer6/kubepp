@@ -31,6 +31,33 @@ include_directories(
 # Add main application
 add_executable(kubepp src/main.cpp ${SOURCES})
 
+# Use FetchContent to download and include the fmt library
+# include(FetchContent)
+
+# FetchContent_Declare(
+#   fmt
+#   GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+#   GIT_TAG 8.1.1 # Use the latest stable version or specify the version you need
+# )
+
+# FetchContent_Declare(
+#   spdlog
+#   GIT_REPOSITORY https://github.com/gabime/spdlog.git
+#   GIT_TAG v1.9.2 # Use the latest stable version or specify the version you need
+# )
+
+# FetchContent_MakeAvailable(fmt spdlog)
+
+# FetchContent_MakeAvailable(fmt)
+
+
+
+
+# Manually add include directories for spdlog
+include_directories(${spdlog_SOURCE_DIR}/include)
+
+include_directories(${fmt_SOURCE_DIR}/include)
+
 # Find the fmt library
 find_package(fmt REQUIRED)
 target_link_libraries(kubepp PRIVATE kubernetes fmt::fmt)

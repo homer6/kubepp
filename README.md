@@ -70,6 +70,7 @@ kubepp export api > all_kinds.json
 ## Building
 
 ```bash
+sudo apt install libspdlog-dev libfmt-dev
 cmake .
 make -j4
 sudo make install
