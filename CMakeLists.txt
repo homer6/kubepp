@@ -22,46 +22,43 @@ set(SOURCES
     src/cjson.cpp
 )
 
+# Platform-specific settings
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    # macOS specific settings
+    include_directories("/usr/local/include")
+    link_directories("/usr/local/lib")
+    find_package(spdlog REQUIRED)
+    find_package(fmt REQUIRED)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    # Ubuntu specific settings
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(spdlog REQUIRED spdlog)
+    pkg_check_modules(fmt REQUIRED fmt)
+    include_directories(${spdlog_INCLUDE_DIRS} ${fmt_INCLUDE_DIRS})
+    link_directories(${spdlog_LIBRARY_DIRS} ${fmt_LIBRARY_DIRS})
+endif()
+
+# Ensure Kubernetes headers are found
 include_directories(
-    "/usr/local/include/kubernetes/include"
-    "/usr/local/include/kubernetes/config"
+    "/usr/local/include/kubernetes"
     "/usr/local/include/kubernetes/api"
+    "/usr/local/include/kubernetes/config"
+    "/usr/local/include/kubernetes/external"
+    "/usr/local/include/kubernetes/include"
+    "/usr/local/include/kubernetes/model"
+    "/usr/local/include/kubernetes/watch"
+    "/usr/local/include/kubernetes/websocket"
 )
 
 # Add main application
 add_executable(kubepp src/main.cpp ${SOURCES})
 
-# Use FetchContent to download and include the fmt library
-# include(FetchContent)
+# Link libraries for the main application
+target_link_libraries(kubepp PRIVATE kubernetes fmt::fmt spdlog::spdlog)
 
-# FetchContent_Declare(
-#   fmt
-#   GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-#   GIT_TAG 8.1.1 # Use the latest stable version or specify the version you need
-# )
-
-# FetchContent_Declare(
-#   spdlog
-#   GIT_REPOSITORY https://github.com/gabime/spdlog.git
-#   GIT_TAG v1.9.2 # Use the latest stable version or specify the version you need
-# )
-
-# FetchContent_MakeAvailable(fmt spdlog)
-
-# FetchContent_MakeAvailable(fmt)
-
-
-
-
-# Manually add include directories for spdlog
-include_directories(${spdlog_SOURCE_DIR}/include)
-
-include_directories(${fmt_SOURCE_DIR}/include)
-
-# Find the fmt library
-find_package(fmt REQUIRED)
-target_link_libraries(kubepp PRIVATE kubernetes fmt::fmt)
-
+# Add shared library
+add_library(kubepp_lib SHARED ${SOURCES})
+target_link_libraries(kubepp_lib PRIVATE kubernetes fmt::fmt spdlog::spdlog)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -75,50 +72,24 @@ configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
   INSTALL_DESTINATION lib/cmake/kubepp_lib
 )
 
-
-
-
-
-
-
-# # Enable testing with CTest
-# enable_testing()
-
-# # Find Google Test package (should work if GTest is installed properly)
-# find_package(GTest REQUIRED)
-# include_directories(${GTEST_INCLUDE_DIRS})
-
-
-# # Add test executable
-# add_executable(test_kubepp tests/TestKubeppApp.cpp ${SOURCES})
-# target_link_libraries(test_kubepp ${GTEST_LIBRARIES} pthread fmt::fmt kubernetes)
-
-
-# # Add test to the project to be run with 'make test' or 'ctest'
-# add_test(NAME kubepp_test COMMAND test_kubepp)
-
-
-
-
+# Install the main executable
 install(TARGETS kubepp DESTINATION bin)
 
-add_library(kubepp_lib SHARED ${SOURCES})
-target_link_libraries(kubepp_lib PRIVATE kubernetes fmt::fmt)
-
+# Install headers
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/"
         DESTINATION "include/kubepp"
         FILES_MATCHING
         PATTERN "*.h"
         PATTERN "*.hpp")
 
-
+# Install CMake configuration files
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/kubepp_libConfig.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/kubepp_libConfigVersion.cmake"
   DESTINATION lib/cmake/kubepp_lib
 )
 
-
+# Install the shared library
 install(TARGETS kubepp_lib
     EXPORT kubepp_libTargets
     LIBRARY DESTINATION lib
@@ -127,6 +98,7 @@ install(TARGETS kubepp_lib
     INCLUDES DESTINATION include
 )
 
+# Export library targets
 install(EXPORT kubepp_libTargets
     FILE kubepp_libTargets.cmake
     NAMESPACE kubepp_lib::

@@ -67,7 +67,7 @@ kubepp export api > all_kinds.json
 
 
 
-## Building
+## Building (Ubuntu)
 
 ```bash
 sudo apt install libspdlog-dev libfmt-dev
@@ -75,6 +75,39 @@ cmake .
 make -j4
 sudo make install
 ```
+
+## Building (MacOS)
+
+```bash
+git clone https://github.com/kubernetes-client/c
+export CLIENT_REPO_ROOT=${PWD}/c
+
+brew install openssl curl libwebsockets uncrustify spdlog
+
+git clone https://github.com/yaml/libyaml
+cd libyaml
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+make
+sudo make install
+cd ../..
+
+
+cd ${CLIENT_REPO_ROOT}/kubernetes
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
+make -j8
+sudo make -j8 install
+
+cd ../../..
+git clone https://github.com/homer6/kubepp.git
+cd kubepp
+cmake .
+sudo make -j8 install
+```
+
 
 ## Including with cmake
 
