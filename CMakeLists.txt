@@ -31,11 +31,18 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_package(fmt REQUIRED)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     # Ubuntu specific settings
-    find_package(spdlog REQUIRED)
-    find_package(fmt REQUIRED)
-    include_directories(${spdlog_INCLUDE_DIRS} ${fmt_INCLUDE_DIRS})
-    link_directories(${spdlog_LIBRARY_DIRS} ${fmt_LIBRARY_DIRS})
+    find_package(spdlog REQUIRED CONFIG)
+    find_package(fmt REQUIRED CONFIG)
+    if(NOT TARGET spdlog::spdlog)
+        message(FATAL_ERROR "spdlog target not found")
+    endif()
+    if(NOT TARGET fmt::fmt)
+        message(FATAL_ERROR "fmt target not found")
+    endif()
 endif()
+
+# Add include directories for fmt and spdlog
+include_directories(${spdlog_INCLUDE_DIRS} ${fmt_INCLUDE_DIRS})
 
 # Ensure Kubernetes headers are found
 include_directories(
